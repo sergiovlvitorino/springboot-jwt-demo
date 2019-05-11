@@ -14,7 +14,7 @@ public class LoginHelper {
 	}
 
 	public HttpHeaders createAuthenticatedHeader(TestRestTemplate restTemplete, Integer port, String mediaType) {
-		return createAuthenticatedHeader(restTemplete, port, "sergio@gmail.com", "123456", mediaType );
+		return createAuthenticatedHeader(restTemplete, port, "abc@def.com", "123456", mediaType );
 	}
 
 	public HttpHeaders createAuthenticatedHeader(TestRestTemplate restTemplete, Integer port, String username, String password, String mediaType) {

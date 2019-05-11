@@ -29,8 +29,8 @@ public class Initialize {
         final Role role = roleRepository.save(new Role("ADMIN", authorityRepository.findAll()));
 
         final User user = new User();
-        user.setName("Sérgio Vitorino");
-        user.setEmail("sergio@gmail.com");
+        user.setName("Lorem Ipsum");
+        user.setEmail("abc@def.com");
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode("123456"));
         user.setRole(role);
