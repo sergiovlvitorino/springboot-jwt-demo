@@ -23,8 +23,7 @@ public class ResponseBuilder {
 	private Boolean validationError = false;
 	private Object resultObject;
 	
-	@Autowired
-	private ObjectMapper mapper;
+	@Autowired private ObjectMapper mapper;
 
 	public ResponseBuilder load(Object object) {
 		if(object instanceof Exception) {
@@ -52,7 +51,7 @@ public class ResponseBuilder {
 				build();
 			}
 		}
-		StringBuilder sbFinalMessage = new StringBuilder();
+		final StringBuilder sbFinalMessage = new StringBuilder();
 		sbFinalMessage.append("{");
 		Set<String> keys = messages.keySet();
 		for (String key : keys) {
@@ -60,8 +59,8 @@ public class ResponseBuilder {
 			sbFinalMessage.append("\"" + messages.get(key) + "\",");
 		}
 		sbFinalMessage.append("}");
-		String finalMessage = sbFinalMessage.toString().replaceAll(",}", "}");
-		HttpStatus status = validationError ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
+		final String finalMessage = sbFinalMessage.toString().replaceAll(",}", "}");
+		final HttpStatus status = validationError ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
 		return ResponseEntity.status(status).body(finalMessage);
 	}
 
