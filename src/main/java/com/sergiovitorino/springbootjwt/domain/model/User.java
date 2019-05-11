@@ -26,10 +26,9 @@ public class User implements UserDetails {
     private UUID id;
 
     private String name;
-    private String email;
 
-    @Column(length=10485760)
-    private String lastToken;
+    @Column(unique = true)
+    private String email;
 
     @JsonIgnore
     private String password;
