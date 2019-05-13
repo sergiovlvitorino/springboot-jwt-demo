@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.util.LoginHelper;
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,24 +22,15 @@ import static org.junit.Assert.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserControllerTest {
 
-    @Autowired
-    private ObjectMapper mapper;
-    @Autowired
-    private TestRestTemplate restTemplete;
-    @LocalServerPort
-    private Integer port;
-
+    @Autowired private ObjectMapper mapper;
+    @Autowired private TestRestTemplate restTemplete;
+    @LocalServerPort private Integer port;
     private static HttpHeaders headers;
 
     @Before
     public void setUp() {
         if (headers == null)
             headers = new LoginHelper().createAuthenticatedHeader(restTemplete, port);
-    }
-
-    @After
-    public void teardown() {
-
     }
 
     @Test
