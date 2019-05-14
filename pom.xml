@@ -61,6 +61,7 @@
 			<artifactId>h2</artifactId>
 			<version>1.4.199</version>
 		</dependency>
+		
 	</dependencies>
 
 	<build>
