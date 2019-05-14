@@ -27,10 +27,10 @@ public class ResponseBuilder {
 
 	public ResponseBuilder load(Object object) {
 		if(object instanceof Exception) {
-			Exception exception = (Exception) object;
+			final Exception exception = (Exception) object;
 			messages.put(EXCEPTION, exception.getMessage());
 		} else if(object instanceof BindingResult) {
-			BindingResult bindingResult = (BindingResult) object;
+			final BindingResult bindingResult = (BindingResult) object;
 			bindingResult.getAllErrors().iterator().forEachRemaining(error -> {
 				messages.put(VALIDATION, error.getDefaultMessage());
 			});
