@@ -39,6 +39,10 @@ public class Role {
         this.authorities = authorities;
     }
 
+    public Role(UUID id) {
+        this.id = id;
+    }
+
     public String toString(){
         return name;
     }

@@ -1,7 +1,10 @@
 package com.sergiovitorino.springbootjwt.controller.ui.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
+import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.util.LoginHelper;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -15,6 +18,7 @@ import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -25,6 +29,7 @@ public class UserControllerTest {
     @Autowired private ObjectMapper mapper;
     @Autowired private TestRestTemplate restTemplete;
     @LocalServerPort private Integer port;
+    @Autowired private RoleRepository roleRepository;
     private static HttpHeaders headers;
 
     @Before
@@ -42,6 +47,26 @@ public class UserControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(list);
         assertFalse(list.isEmpty());
+    }
+
+    @Test
+    public void testIfSaveCommandIsOk() throws Exception {
+        Role role = roleRepository.findAll().get(0);
+        SaveCommand command = new SaveCommand();
+        command.setEmail("savecommand@command.com");
+        command.setName(UUID.randomUUID().toString());
+        command.setPassword("123456");
+        command.setRoleId(role.getId());
+
+        HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        User userCreated = mapper.readValue(responseEntity.getBody(), User.class);
+        assertNotNull(userCreated);
+        assertNotNull(userCreated.getId());
+        assertEquals(command.getName(), userCreated.getName());
     }
 
 }

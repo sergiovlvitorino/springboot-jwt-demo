@@ -5,6 +5,7 @@ import lombok.Data;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.UUID;
 
 @Data
 public class SaveCommand {
@@ -20,5 +21,8 @@ public class SaveCommand {
     @NotNull(message = "Password not found")
     @Size(min = 6, max = 16, message = "Name should be minimum 6 character and maximum 16 character")
     private String password;
+
+    @NotNull(message = "RoleId not found")
+    private UUID roleId;
 
 }

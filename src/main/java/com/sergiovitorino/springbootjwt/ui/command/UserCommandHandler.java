@@ -1,5 +1,6 @@
 package com.sergiovitorino.springbootjwt.ui.command;
 
+import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ public class UserCommandHandler {
         user.setName(command.getName());
         user.setEmail(command.getEmail());
         user.setPassword(command.getPassword());
+        user.setRole(new Role(command.getRoleId()));
         return service.save(user);
     }
 
