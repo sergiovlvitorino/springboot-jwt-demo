@@ -62,7 +62,7 @@ public class UserService implements UserDetailsService {
         return repository.save(old);
     }
 
-    public User desactive(UUID id) {
+    public User disable(UUID id) {
         User user = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setEnabled(false);
         return repository.save(user);

@@ -5,7 +5,7 @@ import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.sergiovitorino.springbootjwt.infrastructure.DesactiveUUIDCommand;
+import com.sergiovitorino.springbootjwt.infrastructure.DisableUUIDCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.ListCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
@@ -42,7 +42,7 @@ public class UserCommandHandler {
     }
 
 
-    public Object execute(DesactiveUUIDCommand command) {
-        return service.desactive(command.getId());
+    public Object execute(DisableUUIDCommand command) {
+        return service.disable(command.getId());
     }
 }

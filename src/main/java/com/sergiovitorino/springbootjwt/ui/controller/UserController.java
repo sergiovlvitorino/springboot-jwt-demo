@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import com.sergiovitorino.springbootjwt.infrastructure.AbstractController;
-import com.sergiovitorino.springbootjwt.infrastructure.DesactiveUUIDCommand;
+import com.sergiovitorino.springbootjwt.infrastructure.DisableUUIDCommand;
 import com.sergiovitorino.springbootjwt.ui.command.UserCommandHandler;
 import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.ListCommand;
@@ -54,7 +54,7 @@ public class UserController extends AbstractController {
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public ResponseEntity delete(@PathVariable(value = "id", required = true) UUID id){
-        return responseBuilder.load(commandHandler.execute(new DesactiveUUIDCommand(id))).build();
+        return responseBuilder.load(commandHandler.execute(new DisableUUIDCommand(id))).build();
     }
 
 }
