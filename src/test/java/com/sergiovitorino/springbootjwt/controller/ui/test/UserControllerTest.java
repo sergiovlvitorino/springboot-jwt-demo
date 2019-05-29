@@ -5,6 +5,7 @@ import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
+import com.sergiovitorino.springbootjwt.ui.command.user.UpdateCommand;
 import com.sergiovitorino.springbootjwt.util.LoginHelper;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -67,6 +68,74 @@ public class UserControllerTest {
         assertNotNull(userCreated);
         assertNotNull(userCreated.getId());
         assertEquals(command.getName(), userCreated.getName());
+    }
+
+    @Test
+    public void testIfEmailAlready() throws Exception {
+        Role role = roleRepository.findAll().get(0);
+        SaveCommand command = new SaveCommand();
+        command.setEmail("email_already@command.com");
+        command.setName(UUID.randomUUID().toString());
+        command.setPassword("123456");
+        command.setRoleId(role.getId());
+
+        HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.POST, entity, String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+        responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.POST, entity, String.class);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        String exceptionMessageExpected = "E-mail already";
+        String exceptionMessageActual = jsonObject.getString("exception");
+        assertEquals(exceptionMessageExpected, exceptionMessageActual);
+    }
+
+    @Test
+    public void testIfUpdateCommandIsOk() throws Exception {
+        User userSaved = createUser();
+        UpdateCommand command = new UpdateCommand();
+        command.setId(userSaved.getId());
+        command.setName(UUID.randomUUID().toString());
+
+        HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.PUT, entity, String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        User userUpdated = mapper.readValue(responseEntity.getBody(), User.class);
+        assertNotNull(userUpdated);
+        assertNotNull(userUpdated.getId());
+        assertEquals(userSaved.getId(), userUpdated.getId());
+        assertNotEquals(userSaved.getName(), userUpdated.getName());
+    }
+
+    @Test
+    public void testIfDisableUUIDCommandIsOk() throws Exception {
+        User userSaved = createUser();
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user/" + userSaved.getId().toString(), HttpMethod.DELETE, entity, String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        User userDisabled = mapper.readValue(responseEntity.getBody(), User.class);
+        assertNotNull(userDisabled);
+        assertNotNull(userDisabled.getId());
+        assertEquals(userSaved.getId(), userDisabled.getId());
+        assertFalse(userDisabled.isEnabled());
+    }
+
+
+    private User createUser() throws Exception {
+        Role role = roleRepository.findAll().get(0);
+        SaveCommand command = new SaveCommand();
+        command.setEmail(UUID.randomUUID().toString() + "@command.com");
+        command.setName(UUID.randomUUID().toString());
+        command.setPassword("123456");
+        command.setRoleId(role.getId());
+
+        HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.POST, entity, String.class);
+        return mapper.readValue(responseEntity.getBody(), User.class);
     }
 
 }
