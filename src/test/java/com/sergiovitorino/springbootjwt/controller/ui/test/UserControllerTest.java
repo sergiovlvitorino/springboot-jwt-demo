@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
+import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.UpdateCommand;
 import com.sergiovitorino.springbootjwt.util.LoginHelper;
@@ -149,6 +150,15 @@ public class UserControllerTest {
         assertNotNull(userDisabled.getId());
         assertEquals(userSaved.getId(), userDisabled.getId());
         assertFalse(userDisabled.isEnabled());
+    }
+
+    @Test
+    public void testIfCountCommandReturnsOk() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user/count?user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Long countActual = Long.valueOf(responseEntity.getBody());
+        assertTrue(countActual > 0);
     }
 
 
