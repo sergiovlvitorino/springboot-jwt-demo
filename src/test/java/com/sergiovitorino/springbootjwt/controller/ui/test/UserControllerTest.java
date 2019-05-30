@@ -52,6 +52,17 @@ public class UserControllerTest {
     }
 
     @Test
+    public void testIfListCommandReturnsOk2() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=0&pageSize=10000&orderBy=name&asc=false&user.enabled=true", HttpMethod.GET, entity, String.class);
+        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        List<User> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(list);
+        assertFalse(list.isEmpty());
+    }
+
+    @Test
     public void testIfSaveCommandReturnsOk() throws Exception {
         Role role = roleRepository.findAll().get(0);
         SaveCommand command = new SaveCommand();
