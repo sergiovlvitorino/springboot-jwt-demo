@@ -94,6 +94,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.4</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/Start.*</exclude>
+                        <exclude>**/Initialize.*</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
