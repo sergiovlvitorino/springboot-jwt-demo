@@ -1,5 +1,7 @@
 # springboot-jwt-demo
 
+This project implements how to use spring boot, spring security and JWT. 
+
 
 [![Build Status](https://travis-ci.org/sergiovlvitorino/springboot-jwt-demo.svg?branch=master)](https://travis-ci.org/sergiovlvitorino/springboot-jwt-demo)
 
