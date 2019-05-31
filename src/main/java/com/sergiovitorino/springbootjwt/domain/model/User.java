@@ -1,6 +1,7 @@
 package com.sergiovitorino.springbootjwt.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sergiovitorino.springbootjwt.infrastructure.AbstractEntity;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class User implements UserDetails {
+public class User extends AbstractEntity implements UserDetails {
 
     @Id
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")

@@ -11,6 +11,8 @@ import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.AuthorityRepository;
 
 import javax.annotation.PostConstruct;
+import java.util.Calendar;
+import java.util.UUID;
 
 @Component
 public class Initialize {
@@ -34,6 +36,8 @@ public class Initialize {
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode("123456"));
         user.setRole(role);
+        user.setDateCreatedAt(Calendar.getInstance());
+        user.setUserIdCreatedAt(UUID.randomUUID());
         userRepository.save(user);
 
     }

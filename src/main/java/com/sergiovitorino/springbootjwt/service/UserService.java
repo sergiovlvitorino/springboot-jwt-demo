@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 
+import java.util.Calendar;
 import java.util.UUID;
 
 @Service
@@ -53,18 +54,24 @@ public class UserService implements UserDetailsService {
             throw new IllegalArgumentException("E-mail already");
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setDateCreatedAt(Calendar.getInstance());
+        user.setUserIdCreatedAt(userLogged.getUserId());
         return repository.save(user);
     }
 
     public User update(User user) {
         User old = repository.findById(user.getId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
         old.setName(user.getName());
+        old.setDateUpdatedAt(Calendar.getInstance());
+        old.setUserIdUpdatedAt(userLogged.getUserId());
         return repository.save(old);
     }
 
     public User disable(UUID id) {
         User user = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setEnabled(false);
+        user.setDateDisabledAt(Calendar.getInstance());
+        user.setUserIdDisabledAt(userLogged.getUserId());
         return repository.save(user);
     }
 }
