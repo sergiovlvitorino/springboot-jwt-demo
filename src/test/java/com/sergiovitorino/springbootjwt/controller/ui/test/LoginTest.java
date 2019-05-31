@@ -51,4 +51,15 @@ public class LoginTest {
         assertEquals(HttpStatus.OK, statusCode);
     }
 
+    @Test
+    public void testIfHttpStatusReturnsForbiddenWhenTokenIsEmpty(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        headers.add("Authorization", "");
+        HttpEntity<String> entity = new HttpEntity<>(null, headers);
+        ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.GET, entity, String.class);
+        HttpStatus statusCode = responseEntity.getStatusCode();
+        assertEquals(HttpStatus.FORBIDDEN, statusCode);
+    }
+
 }
