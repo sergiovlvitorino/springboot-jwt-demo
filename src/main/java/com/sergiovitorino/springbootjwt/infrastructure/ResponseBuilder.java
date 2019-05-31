@@ -23,7 +23,7 @@ public class ResponseBuilder {
 	private Boolean validationError = false;
 	private Object resultObject;
 	
-	@Autowired private ObjectMapper mapper;
+	@Autowired ObjectMapper mapper;
 
 	public ResponseBuilder load(Object object) {
 		if(object instanceof Exception) {
@@ -62,6 +62,10 @@ public class ResponseBuilder {
 		final String finalMessage = sbFinalMessage.toString().replaceAll(",}", "}");
 		final HttpStatus status = validationError ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
 		return ResponseEntity.status(status).body(finalMessage);
+	}
+
+	public void setMapper(ObjectMapper mapper){
+		this.mapper = mapper;
 	}
 
 }
