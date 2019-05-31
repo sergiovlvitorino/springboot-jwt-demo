@@ -66,7 +66,7 @@ public class TokenAuthenticationService {
 		return removeComma(stringBuilder.toString());
 	}
 
-	private String removeComma(final String text){
+	public String removeComma(final String text){
 		if (text.isEmpty()){
 			return text;
 		}else{
