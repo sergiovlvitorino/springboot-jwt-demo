@@ -11,11 +11,7 @@ import java.util.UUID;
 public class UserLogged {
 
 	public UUID getUserId() {
-		try {
-			return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
-		} catch (Exception e) {
-			return null;
-		}
+		return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
 	}
 	
 }
