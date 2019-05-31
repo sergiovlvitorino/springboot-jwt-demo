@@ -15,6 +15,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class Role {
 
     @Id
@@ -41,10 +42,6 @@ public class Role {
 
     public Role(UUID id) {
         this.id = id;
-    }
-
-    public String toString(){
-        return name;
     }
 
     public List<Authority> getAuthorities() {

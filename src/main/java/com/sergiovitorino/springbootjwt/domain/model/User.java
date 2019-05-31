@@ -17,6 +17,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class User implements UserDetails {
 
     @Id
@@ -81,7 +82,4 @@ public class User implements UserDetails {
         return enabled;
     }
 
-    public String toString(){
-        return email;
-    }
 }

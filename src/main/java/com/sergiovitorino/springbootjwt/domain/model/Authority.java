@@ -14,6 +14,7 @@ import java.util.UUID;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class Authority {
 
     @Id
@@ -31,10 +32,6 @@ public class Authority {
 
     public Authority(String name){
         this.name = name;
-    }
-
-    public String toString(){
-        return name;
     }
 
 }
