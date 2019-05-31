@@ -63,6 +63,16 @@ public class UserControllerTest {
     }
 
     @Test
+    public void testIfListCommandReturnsOk3() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
+        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        List<User> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(list);
+    }
+
+    @Test
     public void testIfSaveCommandReturnsOk() throws Exception {
         Role role = roleRepository.findAll().get(0);
         SaveCommand command = new SaveCommand();
@@ -170,6 +180,13 @@ public class UserControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Long countActual = Long.valueOf(responseEntity.getBody());
         assertTrue(countActual > 0);
+    }
+
+    @Test
+    public void testIfCountCommandReturnsOk2() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user/count", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
 
