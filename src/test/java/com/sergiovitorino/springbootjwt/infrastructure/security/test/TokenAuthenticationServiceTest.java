@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import javax.servlet.http.HttpServletRequest;
 
 import java.util.Date;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -57,13 +58,25 @@ public class TokenAuthenticationServiceTest {
     @Test
     public void testIfGetAuthenticationReturnsNullWhenExpired(){
         String token = Jwts.builder()
-                .setSubject("")
+                .setSubject(UUID.randomUUID().toString())
                 .setExpiration(new Date(System.currentTimeMillis() - TokenAuthenticationService.EXPIRATIONTIME))
                 .signWith(SignatureAlgorithm.HS512, TokenAuthenticationService.SECRET).compact();
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getHeader(TokenAuthenticationService.HEADER_STRING)).thenReturn(token);
         Authentication authentication = this.service.getAuthentication(request);
         assertNull(authentication);
+    }
+
+    @Test
+    public void testIfGetAuthenticationReturnsAnAuthorizationObjectWhenAuthoritesAreEmpty(){
+        String token = Jwts.builder()
+                .setSubject(UUID.randomUUID().toString())
+                .setExpiration(new Date(System.currentTimeMillis() + TokenAuthenticationService.EXPIRATIONTIME))
+                .signWith(SignatureAlgorithm.HS512, TokenAuthenticationService.SECRET).compact();
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader(TokenAuthenticationService.HEADER_STRING)).thenReturn(token);
+        Authentication authentication = this.service.getAuthentication(request);
+        assertNotNull(authentication);
     }
 
 }
