@@ -47,14 +47,27 @@ public class TokenAuthenticationService {
 			final String token = request.getHeader(HEADER_STRING);
 			if (token != null) {
 				final String userId = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().getSubject();
-				final String[] authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities")).split(",");
-				final List<GrantedAuthority> authorityList = AuthorityUtils.createAuthorityList(authorities);
-				return userId != null ? new UsernamePasswordAuthenticationToken(userId, null, authorityList) : null;
+
+				if (userId == null)
+					throw new NullPointerException("UserId not found");
+
+				final String authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities"));
+
+				final String[] authoritiesSplitted = splitAuthorites(authorities);
+				final List<GrantedAuthority> authorityList = AuthorityUtils.createAuthorityList(authoritiesSplitted);
+
+				return new UsernamePasswordAuthenticationToken(userId, null, authorityList);
 			}
 		}catch(Exception e) {
 			return null;
 		}
 		return null;
+	}
+
+	private String[] splitAuthorites(String text){
+		if (text == null)
+			return new String[0];
+		return text.split(",");
 	}
 
 	private String extractAuthorities(final List<Authority> authorities){
