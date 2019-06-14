@@ -11,6 +11,7 @@ This example shows how to implement spring boot, spring security and JWT.
 * JDK 1.8
 * Maven 3
 
+### Running
 Open the terminal. Put the commands below to download and start the project:
 * $> git clone https://github.com/sergiovlvitorino/springboot-jwt-demo
 * $> cd springboot-jwt-demo
