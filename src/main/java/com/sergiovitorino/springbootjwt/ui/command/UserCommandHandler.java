@@ -3,11 +3,11 @@ package com.sergiovitorino.springbootjwt.ui.command;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.service.UserService;
+import com.sergiovitorino.springbootjwt.ui.command.user.ListCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.sergiovitorino.springbootjwt.infrastructure.DisableUUIDCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
-import com.sergiovitorino.springbootjwt.ui.command.user.ListCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.UpdateCommand;
 

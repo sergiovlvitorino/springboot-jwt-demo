@@ -25,9 +25,11 @@ public class Initialize {
     @PostConstruct
     public void execute(){
 
-        authorityRepository.save(new Authority(AuthorityConstants.USER_SAVE));
         authorityRepository.save(new Authority(AuthorityConstants.USER_RETREAVE));
+        authorityRepository.save(new Authority(AuthorityConstants.ROLE_RETREAVE));
+        roleRepository.save(new Role("GUEST", authorityRepository.findAll()));
 
+        authorityRepository.save(new Authority(AuthorityConstants.USER_SAVE));
         final Role role = roleRepository.save(new Role("ADMIN", authorityRepository.findAll()));
 
         final User user = new User();
