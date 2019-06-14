@@ -13,14 +13,20 @@ This example shows how to implement spring boot, spring security and JWT.
 
 ### Running
 Open the terminal. Put the commands below to download and start the project:
-* $> git clone https://github.com/sergiovlvitorino/springboot-jwt-demo
-* $> cd springboot-jwt-demo
-* $> mvn spring-boot:run
+
+`git clone https://github.com/sergiovlvitorino/springboot-jwt-demo`
+
+`cd springboot-jwt-demo`
+
+`mvn spring-boot:run`
+
 
 ### Running tests
 Open the terminal. Put the commands below to test:
-* $> cd springboot-jwt-demo
-* $> mvn test
+
+`cd springboot-jwt-demo`
+
+`mvn test`
 
 ## Authors
 
