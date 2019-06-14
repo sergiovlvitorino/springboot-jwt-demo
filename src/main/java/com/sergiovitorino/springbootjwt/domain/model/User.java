@@ -27,11 +27,14 @@ public class User extends AbstractEntity implements UserDetails {
     @Type(type = "uuid-binary")
     private UUID id;
 
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
+    @Getter(AccessLevel.NONE)
+    @Column(nullable = false)
     @JsonIgnore
     private String password;
 
