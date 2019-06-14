@@ -11,16 +11,32 @@ This example shows how to implement spring boot, spring security and JWT.
 * JDK 1.8
 * Maven 3
 
+### Endpoints
+Method|Url|Body|Description|Returns|Authenticated?
+------|---|----|-----------|-------|--------------
+POST|http://localhost:8080/login|{username:,password:}|SignIn|JWT|No
+POST|http://localhost:8080/user|{name:,email:,password:,roleId:}|Create user|User json|Yes
+PUT|http://localhost:8080/user|{id:,name:}|Update user|User json|Yes
+DELETE|http://localhost:8080/user/{id}|null|Disable user|User json|Yes
+GET|http://localhost:8080/user?pageNumber=0&pageSize=1&orderBy=name&asc=true&user.enabled=true|null|Number of users|-|Yes
+GET|http://localhost:8080/user/count?user.enabled=true|null|Number of users|-|Yes
+
 ### Running
 Open the terminal. Put the commands below to download and start the project:
-* $> git clone https://github.com/sergiovlvitorino/springboot-jwt-demo
-* $> cd springboot-jwt-demo
-* $> mvn spring-boot:run
+
+`git clone https://github.com/sergiovlvitorino/springboot-jwt-demo`
+
+`cd springboot-jwt-demo`
+
+`mvn spring-boot:run`
+
 
 ### Running tests
 Open the terminal. Put the commands below to test:
-* $> cd springboot-jwt-demo
-* $> mvn test
+
+`cd springboot-jwt-demo`
+
+`mvn test`
 
 ## Authors
 
