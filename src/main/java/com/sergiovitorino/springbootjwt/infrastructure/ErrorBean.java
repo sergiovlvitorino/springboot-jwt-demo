@@ -4,15 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
-import java.util.UUID;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DisableUUIDCommand {
+public class ErrorBean {
 
-    @NotNull
-    private UUID id;
+    private String className;
+    private String fieldError;
+    private String message;
 
 }

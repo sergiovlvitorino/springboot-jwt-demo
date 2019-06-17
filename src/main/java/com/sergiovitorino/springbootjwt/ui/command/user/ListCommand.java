@@ -4,6 +4,7 @@ import com.sergiovitorino.springbootjwt.domain.model.User;
 import lombok.Data;
 
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -13,7 +14,7 @@ public class ListCommand {
     private Integer pageNumber;
     @Min(1)
     private Integer pageSize;
-    @Min(1)
+    @NotBlank
     private String orderBy;
     @NotNull
     private Boolean asc;
