@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
 import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.UpdateCommand;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -45,10 +48,10 @@ public class UserControllerTest {
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
         JSONObject jsonObject = new JSONObject(responseEntity.getBody());
-        List<User> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        List<User> users = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertNotNull(list);
-        assertFalse(list.isEmpty());
+        assertNotNull(users);
+        assertFalse(users.isEmpty());
     }
 
     @Test
@@ -123,9 +126,9 @@ public class UserControllerTest {
         entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
         responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.POST, entity, String.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        ErrorBean errorBean = mapper.readValue(responseEntity.getBody(), ErrorBean.class);
         String exceptionMessageExpected = "E-mail already";
-        String exceptionMessageActual = jsonObject.getString("exception");
+        String exceptionMessageActual = errorBean.getMessage();
         assertEquals(exceptionMessageExpected, exceptionMessageActual);
     }
 
