@@ -19,6 +19,16 @@ public abstract class AbstractController {
 
     @Autowired private ObjectMapper mapper;
 
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity methodArgumentNotValidExceptionHandler(BindException exception) throws Exception {
+        log.log(Level.SEVERE, exception.getMessage());
+        final List<ErrorBean> errors = new ArrayList<>();
+        exception.getBindingResult().getFieldErrors().stream().forEach(fieldError -> {
+            errors.add(new ErrorBean(exception.getClass().getName(), fieldError.getField(), fieldError.getDefaultMessage()));
+        });
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapper.writeValueAsString(errors));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException exception) throws Exception {
         log.log(Level.SEVERE, exception.getMessage());
