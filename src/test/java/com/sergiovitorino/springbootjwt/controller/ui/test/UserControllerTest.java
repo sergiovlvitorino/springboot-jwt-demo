@@ -5,7 +5,6 @@ import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
-import com.sergiovitorino.springbootjwt.ui.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.ui.command.user.UpdateCommand;
 import com.sergiovitorino.springbootjwt.util.LoginHelper;
@@ -17,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -42,6 +39,46 @@ public class UserControllerTest {
         if (headers == null)
             headers = new LoginHelper().createAuthenticatedHeader(restTemplete, port);
     }
+
+    @Test
+    public void testIfListCommandReturnsBadRequestWhenPageNumberIsMinusOne() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=-1&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
+        assertNotNull(errors);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void testIfListCommandReturnsBadRequestWhenPageSizeIsMinusOne() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=1&pageSize=-1&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
+        assertNotNull(errors);
+        assertFalse(errors.isEmpty());
+    }
+    @Test
+    public void testIfListCommandReturnsBadRequestWhenOrderByIsEmpty() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=1&pageSize=10000&orderBy=&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
+        assertNotNull(errors);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void testIfListCommandReturnsBadRequestWhenAscIsInvalid() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/user?pageNumber=1&pageSize=10000&orderBy=name&asc=aaa&user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
+        assertNotNull(errors);
+        assertFalse(errors.isEmpty());
+    }
+
 
     @Test
     public void testIfListCommandReturnsOk() throws Exception {
