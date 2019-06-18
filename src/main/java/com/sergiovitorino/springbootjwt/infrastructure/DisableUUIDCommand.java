@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class DisableUUIDCommand {
 
-    @NotNull
+    @NotNull(message = "Id not found")
     private UUID id;
 
 }
