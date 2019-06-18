@@ -1,6 +1,7 @@
 package com.sergiovitorino.springbootjwt.infrastructure;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

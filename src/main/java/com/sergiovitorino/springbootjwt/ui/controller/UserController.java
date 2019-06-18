@@ -53,8 +53,8 @@ public class UserController extends AbstractController {
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @DeleteMapping(value = "/{id}")
-    public User delete(@PathVariable(value = "id", required = true) UUID id){
-        return commandHandler.execute(new DisableUUIDCommand(id));
+    public User delete(@Valid DisableUUIDCommand command){
+        return commandHandler.execute(command);
     }
 
 }
