@@ -1,14 +1,14 @@
 package com.sergiovitorino.springbootjwt.infrastructure;
 
+import com.sergiovitorino.springbootjwt.domain.model.Authority;
+import com.sergiovitorino.springbootjwt.domain.model.Role;
+import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.domain.repository.AuthorityRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import com.sergiovitorino.springbootjwt.domain.model.Authority;
-import com.sergiovitorino.springbootjwt.domain.model.Role;
-import com.sergiovitorino.springbootjwt.domain.model.User;
-import com.sergiovitorino.springbootjwt.domain.repository.AuthorityRepository;
 
 import javax.annotation.PostConstruct;
 import java.util.Calendar;
