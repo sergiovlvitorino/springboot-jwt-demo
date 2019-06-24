@@ -7,8 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,19 +19,25 @@ public abstract class AbstractController {
     @Autowired private ObjectMapper mapper;
 
     @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class})
-    public ResponseEntity bindExceptionHandler(BindException exception) throws Exception {
+    public ResponseEntity bindExceptionHandler(final BindException exception) throws Exception {
         log.log(Level.SEVERE, exception.getMessage());
         final List<ErrorBean> errors = new ArrayList<>();
         exception.getBindingResult().getFieldErrors().stream().forEach(fieldError -> {
-            errors.add(new ErrorBean(exception.getClass().getName(), fieldError.getField(), fieldError.getDefaultMessage()));
+            final ErrorBean errorBean =
+                    ErrorBean.builder()
+                    .className(exception.getClass().getName())
+                    .fieldError(fieldError.getField())
+                    .message(fieldError.getDefaultMessage())
+                            .build();
+            errors.add(errorBean);
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapper.writeValueAsString(errors));
     }
 
     @ExceptionHandler
-    public ResponseEntity exceptionHandler(Exception exception) throws Exception {
+    public ResponseEntity exceptionHandler(final Exception exception) throws Exception {
         log.log(Level.SEVERE, exception.getMessage());
-        ErrorBean errorBean = new ErrorBean(exception.getClass().getName(), "", exception.getMessage());
+        final ErrorBean errorBean = ErrorBean.builder().className(exception.getClass().getName()).fieldError("").message(exception.getMessage()).build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapper.writeValueAsString(errorBean));
     }
 
