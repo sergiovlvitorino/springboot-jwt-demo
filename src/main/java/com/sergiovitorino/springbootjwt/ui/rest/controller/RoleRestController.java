@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
+package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.infrastructure.AbstractController;
