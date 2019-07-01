@@ -15,13 +15,13 @@ This example shows how to implement spring boot, spring security and JWT.
 Method|Url|Body|Description|Returns|Authenticated?
 ------|---|----|-----------|-------|--------------
 POST|http://localhost:8080/login|{username:,password:}|SignIn|JWT|No
-POST|http://localhost:8080/user|{name:,email:,password:,roleId:}|Create user|User json|Yes
-PUT|http://localhost:8080/user|{id:,name:}|Update user|User json|Yes
-DELETE|http://localhost:8080/user/{id}|null|Disable user|User json|Yes
-GET|http://localhost:8080/user?pageNumber=0&pageSize=1&orderBy=name&asc=true&user.enabled=true|null|User list|-|Yes
-GET|http://localhost:8080/user/count?user.enabled=true|null|Number of users|-|Yes
-GET|http://localhost:8080/role?pageNumber=0&pageSize=1&orderBy=name&asc=true&role.name=GUEST|null|Role list|-|Yes
-GET|http://localhost:8080/role/count?role.name=GUEST|null|Number of roles|-|Yes
+POST|http://localhost:8080/rest/user|{name:,email:,password:,roleId:}|Create user|User json|Yes
+PUT|http://localhost:8080/rest/user|{id:,name:}|Update user|User json|Yes
+DELETE|http://localhost:8080/rest/user/{id}|null|Disable user|User json|Yes
+GET|http://localhost:8080/rest/user?pageNumber=0&pageSize=1&orderBy=name&asc=true&user.enabled=true|null|User list|-|Yes
+GET|http://localhost:8080/rest/user/count?user.enabled=true|null|Number of users|-|Yes
+GET|http://localhost:8080/rest/role?pageNumber=0&pageSize=1&orderBy=name&asc=true&role.name=GUEST|null|Role list|-|Yes
+GET|http://localhost:8080/rest/role/count?role.name=GUEST|null|Number of roles|-|Yes
 
 
 ### Running

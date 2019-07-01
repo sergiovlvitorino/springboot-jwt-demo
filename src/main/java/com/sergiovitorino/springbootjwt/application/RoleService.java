@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.service;
+package com.sergiovitorino.springbootjwt.application;
 
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;

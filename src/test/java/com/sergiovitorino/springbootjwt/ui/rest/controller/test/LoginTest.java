@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.controller.ui.test;
+package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;

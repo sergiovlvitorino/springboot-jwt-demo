@@ -1,17 +1,13 @@
-package com.sergiovitorino.springbootjwt.ui.command.role;
+package com.sergiovitorino.springbootjwt.application.command.user;
 
-import com.sergiovitorino.springbootjwt.domain.model.Role;
-import lombok.AllArgsConstructor;
+import com.sergiovitorino.springbootjwt.domain.model.User;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class ListCommand {
 
     @Min(0)
@@ -23,5 +19,5 @@ public class ListCommand {
     @NotNull
     private Boolean asc;
 
-    private Role role;
+    private User user;
 }

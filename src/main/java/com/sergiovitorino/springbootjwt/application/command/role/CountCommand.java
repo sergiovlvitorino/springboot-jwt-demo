@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.ui.command.role;
+package com.sergiovitorino.springbootjwt.application.command.role;
 
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import lombok.Data;

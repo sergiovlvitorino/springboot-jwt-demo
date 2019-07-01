@@ -1,11 +1,11 @@
-package com.sergiovitorino.springbootjwt.ui.controller;
+package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.infrastructure.AbstractController;
 import com.sergiovitorino.springbootjwt.infrastructure.AuthorityConstants;
-import com.sergiovitorino.springbootjwt.ui.command.RoleCommandHandler;
-import com.sergiovitorino.springbootjwt.ui.command.role.CountCommand;
-import com.sergiovitorino.springbootjwt.ui.command.role.ListCommand;
+import com.sergiovitorino.springbootjwt.application.command.RoleCommandHandler;
+import com.sergiovitorino.springbootjwt.application.command.role.CountCommand;
+import com.sergiovitorino.springbootjwt.application.command.role.ListCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/role")
+@RequestMapping("/rest/role")
 @Validated
-public class RoleController extends AbstractController {
+public class RoleRestController extends AbstractController {
 
     @Autowired private RoleCommandHandler commandHandler;
 

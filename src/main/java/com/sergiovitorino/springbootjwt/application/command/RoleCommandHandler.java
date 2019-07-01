@@ -1,9 +1,9 @@
-package com.sergiovitorino.springbootjwt.ui.command;
+package com.sergiovitorino.springbootjwt.application.command;
 
+import com.sergiovitorino.springbootjwt.application.command.role.CountCommand;
+import com.sergiovitorino.springbootjwt.application.command.role.ListCommand;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
-import com.sergiovitorino.springbootjwt.service.RoleService;
-import com.sergiovitorino.springbootjwt.ui.command.role.CountCommand;
-import com.sergiovitorino.springbootjwt.ui.command.role.ListCommand;
+import com.sergiovitorino.springbootjwt.application.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
