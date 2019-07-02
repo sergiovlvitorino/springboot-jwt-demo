@@ -5,7 +5,7 @@ import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.infrastructure.DisableUUIDCommand;
-import com.sergiovitorino.springbootjwt.application.UserService;
+import com.sergiovitorino.springbootjwt.application.service.UserService;
 import com.sergiovitorino.springbootjwt.application.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
 import org.springframework.beans.factory.annotation.Autowired;

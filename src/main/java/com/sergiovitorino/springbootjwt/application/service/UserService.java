@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.application;
+package com.sergiovitorino.springbootjwt.application.service;
 
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
