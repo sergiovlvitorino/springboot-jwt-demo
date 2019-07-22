@@ -1,6 +1,7 @@
 package com.sergiovitorino.springbootjwt.infrastructure;
 
 import com.sergiovitorino.springbootjwt.domain.model.Authority;
+import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.AuthorityRepository;
