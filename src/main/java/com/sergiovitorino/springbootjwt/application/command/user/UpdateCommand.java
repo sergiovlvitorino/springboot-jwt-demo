@@ -1,6 +1,7 @@
 package com.sergiovitorino.springbootjwt.application.command.user;
 
 import lombok.Data;
+import org.hibernate.validator.constraints.SafeHtml;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -14,6 +15,7 @@ public class UpdateCommand {
 
     @NotNull(message = "Name not found")
     @Size(min = 2, max = 50, message = "Name should be minimum 2 character and maximum 50 character")
+    @SafeHtml
     private String name;
 
 }

@@ -148,6 +148,21 @@ public class UserRestControllerTest {
     }
 
     @Test
+    public void testIfSaveCommandReturnsBadRequest2() throws Exception {
+        final Role role = roleRepository.findAll().get(0);
+        final SaveCommand command = new SaveCommand();
+        command.setEmail("savecommand@command.com");
+        command.setName("<html>lorem ipsum</html>");
+        command.setPassword("<html>lorem ipsum</html>");
+        command.setRoleId(role.getId());
+
+        final HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
+        final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void testIfSaveCommandReturnsInternalServerErrorWhenEmailAlready() throws Exception {
         final Role role = roleRepository.findAll().get(0);
         final SaveCommand command = new SaveCommand();
