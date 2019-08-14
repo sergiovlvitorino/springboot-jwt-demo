@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.infrastructure;
+package com.sergiovitorino.springbootjwt.application.command;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,7 @@
-package com.sergiovitorino.springbootjwt.infrastructure;
+package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class AbstractController {
+public abstract class AbstractRestController {
 
     private Logger log = Logger.getLogger(this.getClass().getName());
     @Autowired private ObjectMapper mapper;

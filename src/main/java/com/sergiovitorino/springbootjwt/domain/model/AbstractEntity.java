@@ -1,4 +1,4 @@
-package com.sergiovitorino.springbootjwt.infrastructure;
+package com.sergiovitorino.springbootjwt.domain.model;
 
 import lombok.Data;
 import org.hibernate.annotations.Type;
