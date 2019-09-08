@@ -19,7 +19,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/rest/user")
 @Validated
-public class UserRestController extends AbstractRestController {
+public class UserRestController {
 
     @Autowired private UserCommandHandler commandHandler;
 
