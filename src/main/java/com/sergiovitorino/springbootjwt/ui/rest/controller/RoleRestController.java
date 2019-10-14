@@ -18,7 +18,7 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/rest/role")
 @Validated
-public class RoleRestController extends AbstractRestController {
+public class RoleRestController {
 
     @Autowired private RoleCommandHandler commandHandler;
 
