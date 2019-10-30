@@ -31,7 +31,7 @@ public class LoginTest {
         String password = UUID.randomUUID().toString();
         String credentials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
         HttpEntity<String> entity = new HttpEntity<>(credentials, headers);
         ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
         HttpStatus statusCode = responseEntity.getStatusCode();
@@ -44,7 +44,7 @@ public class LoginTest {
         String password = "123456";
         String credentials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
         HttpEntity<String> entity = new HttpEntity<>(credentials, headers);
         ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
         HttpStatus statusCode = responseEntity.getStatusCode();
@@ -54,7 +54,7 @@ public class LoginTest {
     @Test
     public void testIfHttpStatusReturnsForbiddenWhenTokenIsEmpty(){
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_UTF8_VALUE));
+        headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
         headers.add("Authorization", "");
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/user", HttpMethod.GET, entity, String.class);
