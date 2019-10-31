@@ -23,11 +23,11 @@ public class UserRestController {
 
     @Autowired private UserCommandHandler commandHandler;
 
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETREAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
     @RequestMapping(method = RequestMethod.GET)
     public Page<User> get(@Valid ListCommand command) { return commandHandler.execute(command); }
 
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETREAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
     @RequestMapping(value = "/count", method = RequestMethod.GET)
     public Long get(CountCommand command) {
         return commandHandler.execute(command);

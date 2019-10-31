@@ -22,13 +22,13 @@ public class RoleRestController {
 
     @Autowired private RoleCommandHandler commandHandler;
 
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETREAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
     @GetMapping
     public Page<Role> get(@Valid ListCommand command) {
         return commandHandler.execute(command);
     }
 
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETREAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
     @GetMapping("/count")
     public Long get(CountCommand command) {
         return commandHandler.execute(command);

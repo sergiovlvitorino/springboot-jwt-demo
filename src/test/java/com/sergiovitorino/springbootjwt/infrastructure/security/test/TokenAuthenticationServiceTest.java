@@ -5,7 +5,11 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,14 +19,11 @@ import java.util.UUID;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokenAuthenticationServiceTest {
 
-    private TokenAuthenticationService service;
-
-    @Before
-    public void setUp(){
-        service = new TokenAuthenticationService();
-    }
+    @Autowired private TokenAuthenticationService service;
 
     @Test
     public void testIfRemoveCommaIsOk(){
