@@ -24,11 +24,11 @@ public class UserRestController {
     @Autowired private UserCommandHandler commandHandler;
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
-    @RequestMapping(method = RequestMethod.GET)
+    @GetMapping
     public Page<User> get(@Valid ListCommand command) { return commandHandler.execute(command); }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
-    @RequestMapping(value = "/count", method = RequestMethod.GET)
+    @GetMapping("/count")
     public Long get(CountCommand command) {
         return commandHandler.execute(command);
     }
@@ -46,7 +46,7 @@ public class UserRestController {
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
-    @DeleteMapping(value = "/{id}")
+    @DeleteMapping("/{id}")
     public User delete(@Valid DisableUUIDCommand command){
         return commandHandler.execute(command);
     }
