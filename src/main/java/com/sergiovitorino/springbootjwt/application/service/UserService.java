@@ -20,9 +20,11 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository repository;
 
-    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    @Autowired private UserLogged userLogged;
+    @Autowired
+    private UserLogged userLogged;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
