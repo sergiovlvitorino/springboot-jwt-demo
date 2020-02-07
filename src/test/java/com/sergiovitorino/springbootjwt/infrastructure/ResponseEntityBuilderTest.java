@@ -35,7 +35,7 @@ public class ResponseEntityBuilderTest {
 
         try{
             validator.addError("Mock Error");
-            responseEntityBuilder.result(null).build();
+            responseEntityBuilder.bindingResult(null).result(null).build();
             Assert.fail();
         }catch (IllegalArgumentException e){
             Assert.assertTrue(true);
