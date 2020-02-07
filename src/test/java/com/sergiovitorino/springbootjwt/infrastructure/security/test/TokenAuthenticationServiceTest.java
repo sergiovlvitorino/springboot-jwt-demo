@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.UUID;
 
@@ -77,6 +78,16 @@ public class TokenAuthenticationServiceTest {
         when(request.getHeader(TokenAuthenticationService.HEADER_STRING)).thenReturn(token);
         Authentication authentication = this.service.getAuthentication(request);
         assertNotNull(authentication);
+    }
+
+    @Test
+    public void testIfAddAuthenticationThrowsIllegalArgumentExceptionWhenUsernameNotFound(){
+        try{
+            service.addAuthentication(null, UUID.randomUUID().toString() + "@def.com");
+            fail();
+        }catch (IllegalArgumentException e){
+            assertTrue(true);
+        }
     }
 
 }

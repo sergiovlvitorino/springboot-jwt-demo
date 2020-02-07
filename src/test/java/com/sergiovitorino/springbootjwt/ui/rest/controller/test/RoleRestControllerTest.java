@@ -47,6 +47,13 @@ public class RoleRestControllerTest {
     }
 
     @Test
+    public void testIfListCommandReturnsBadRequest() throws Exception {
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=-1&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void testIfListCommandReturnsOk2() throws Exception {
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);

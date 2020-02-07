@@ -215,6 +215,16 @@ public class UserRestControllerTest {
     }
 
     @Test
+    public void testIfUpdateCommandReturnsBadRequest2() throws Exception {
+        final UpdateCommand command = new UpdateCommand();
+        command.setId(UUID.randomUUID());
+        command.setName(UUID.randomUUID().toString());
+        final HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
+        final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.PUT, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void testIfDisableUUIDCommandReturnsOk() throws Exception {
         final User userSaved = createUser();
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
@@ -232,6 +242,13 @@ public class UserRestControllerTest {
     public void testIfDisableUUIDCommandReturnsBadRequest() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/aaa", HttpMethod.DELETE, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void testIfDisableUUIDCommandReturnsBadRequest2() throws Exception {
+        final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+        final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/" + UUID.randomUUID().toString(), HttpMethod.DELETE, entity, String.class);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
