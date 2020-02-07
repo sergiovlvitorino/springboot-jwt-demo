@@ -38,4 +38,7 @@ public class ResponseEntityBuilder {
         return this;
     }
 
+    public void setMapper(ObjectMapper mapper) { this.mapper = mapper; }
+    public void setValidator(Validator validator) { this.validator = validator; }
+
 }
