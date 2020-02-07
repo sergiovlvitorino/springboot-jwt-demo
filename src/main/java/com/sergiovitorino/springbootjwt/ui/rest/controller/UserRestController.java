@@ -7,48 +7,58 @@ import com.sergiovitorino.springbootjwt.application.command.user.ListCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
-import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.infrastructure.ResponseEntityBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/rest/user")
-@Validated
-public class UserRestController {
+public class UserRestController  {
 
     @Autowired private UserCommandHandler commandHandler;
+    @Autowired private ResponseEntityBuilder responseEntityBuilder;
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
     @GetMapping
-    public Page<User> get(@Valid ListCommand command) { return commandHandler.execute(command); }
+    public ResponseEntity get(@Valid ListCommand command, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return responseEntityBuilder.bindingResult(bindingResult).build();
+        return responseEntityBuilder.result(commandHandler.execute(command)).build();
+    }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
     @GetMapping("/count")
-    public Long get(CountCommand command) {
-        return commandHandler.execute(command);
+    public ResponseEntity get(CountCommand command) {
+        return responseEntityBuilder.result(commandHandler.execute(command)).build();
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PostMapping
-    public User post(@RequestBody @Valid SaveCommand command) {
-        return commandHandler.execute(command);
+    public ResponseEntity post(@RequestBody @Valid SaveCommand command, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return responseEntityBuilder.bindingResult(bindingResult).build();
+        return responseEntityBuilder.result(commandHandler.execute(command)).build();
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PutMapping
-    public User put(@RequestBody @Valid UpdateCommand command) {
-        return commandHandler.execute(command);
+    public ResponseEntity put(@RequestBody @Valid UpdateCommand command, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return responseEntityBuilder.bindingResult(bindingResult).build();
+        return responseEntityBuilder.result(commandHandler.execute(command)).build();
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @DeleteMapping("/{id}")
-    public User delete(@Valid DisableUUIDCommand command){
-        return commandHandler.execute(command);
+    public ResponseEntity delete(@Valid DisableUUIDCommand command, BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return responseEntityBuilder.bindingResult(bindingResult).build();
+        return responseEntityBuilder.result(commandHandler.execute(command)).build();
     }
 
 }

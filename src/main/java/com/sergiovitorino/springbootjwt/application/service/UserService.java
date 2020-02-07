@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjwt.application.service;
 
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.Validator;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -26,9 +27,17 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserLogged userLogged;
 
+    @Autowired
+    private Validator validator;
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return repository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = repository.findByEmail(email).orElse(null);
+        if(user == null){
+            validator.addError("User not found");
+            return null;
+        }
+        return user;
     }
 
     public Page<User> findAll(Integer pageNumber, Integer pageSize, String orderBy, Boolean asc, User user) {
@@ -52,8 +61,10 @@ public class UserService implements UserDetailsService {
 
     public User save(User user) {
         User old = repository.findByEmail(user.getEmail()).orElse(null);
-        if (old != null)
-            throw new IllegalArgumentException("E-mail already");
+        if (old != null){
+            validator.addError("E-mail already");
+            return null;
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setDateCreatedAt(Calendar.getInstance());
@@ -62,7 +73,11 @@ public class UserService implements UserDetailsService {
     }
 
     public User update(User user) {
-        User old = repository.findById(user.getId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User old = repository.findById(user.getId()).orElse(null);
+        if (old == null){
+            validator.addError("User not found");
+            return null;
+        }
         old.setName(user.getName());
         old.setDateUpdatedAt(Calendar.getInstance());
         old.setUserIdUpdatedAt(userLogged.getUserId());
@@ -70,7 +85,11 @@ public class UserService implements UserDetailsService {
     }
 
     public User disable(UUID id) {
-        User user = repository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = repository.findById(id).orElse(null);
+        if (user == null){
+            validator.addError("User not found");
+            return null;
+        }
         user.setEnabled(false);
         user.setDateDisabledAt(Calendar.getInstance());
         user.setUserIdDisabledAt(userLogged.getUserId());

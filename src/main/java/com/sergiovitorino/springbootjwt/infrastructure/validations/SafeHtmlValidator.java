@@ -12,7 +12,7 @@ public class SafeHtmlValidator implements ConstraintValidator<SafeHtml, String> 
 
     @Deprecated
     public void casa(){
-        
+
     }
 
     @Override

@@ -163,7 +163,7 @@ public class UserRestControllerTest {
     }
 
     @Test
-    public void testIfSaveCommandReturnsInternalServerErrorWhenEmailAlready() throws Exception {
+    public void testIfSaveCommandReturnsBadRequestWhenEmailAlready() throws Exception {
         final Role role = roleRepository.findAll().get(0);
         final SaveCommand command = new SaveCommand();
         command.setEmail("email_already@command.com");
@@ -177,10 +177,10 @@ public class UserRestControllerTest {
 
         entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
         responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        final ErrorBean errorBean = mapper.readValue(responseEntity.getBody(), ErrorBean.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         final String exceptionMessageExpected = "E-mail already";
-        final String exceptionMessageActual = errorBean.getMessage();
+        final String exceptionMessageActual = errors.get(0).getMessage();
         assertEquals(exceptionMessageExpected, exceptionMessageActual);
     }
 
