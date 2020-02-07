@@ -1,9 +1,9 @@
 package com.sergiovitorino.springbootjwt.application.command.user;
 
+import com.sergiovitorino.springbootjwt.infrastructure.validations.SafeHtml;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.SafeHtml;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;

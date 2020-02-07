@@ -1,7 +1,7 @@
 package com.sergiovitorino.springbootjwt.application.command.user;
 
+import com.sergiovitorino.springbootjwt.infrastructure.validations.SafeHtml;
 import lombok.Data;
-import org.hibernate.validator.constraints.SafeHtml;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
