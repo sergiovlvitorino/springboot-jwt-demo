@@ -24,4 +24,6 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapper.writeValueAsString(errorBean));
     }
 
+    public void setMapper(ObjectMapper mapper){ this.mapper = mapper; }
+
 }
