@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +30,9 @@ public class UserService implements UserDetailsService {
     private Validator validator;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = repository.findByEmail(email).orElse(null);
-        if(user == null){
+    public UserDetails loadUserByUsername(String email) {
+        User user = repository.findByEmail(email);
+        if (user == null) {
             validator.addError("User not found");
             return null;
         }
@@ -60,8 +59,8 @@ public class UserService implements UserDetailsService {
     }
 
     public User save(User user) {
-        User old = repository.findByEmail(user.getEmail()).orElse(null);
-        if (old != null){
+        User old = repository.findByEmail(user.getEmail());
+        if (old != null) {
             validator.addError("E-mail already");
             return null;
         }
@@ -74,7 +73,7 @@ public class UserService implements UserDetailsService {
 
     public User update(User user) {
         User old = repository.findById(user.getId()).orElse(null);
-        if (old == null){
+        if (old == null) {
             validator.addError("User not found");
             return null;
         }
@@ -86,7 +85,7 @@ public class UserService implements UserDetailsService {
 
     public User disable(UUID id) {
         User user = repository.findById(id).orElse(null);
-        if (user == null){
+        if (user == null) {
             validator.addError("User not found");
             return null;
         }
@@ -94,5 +93,13 @@ public class UserService implements UserDetailsService {
         user.setDateDisabledAt(Calendar.getInstance());
         user.setUserIdDisabledAt(userLogged.getUserId());
         return repository.save(user);
+    }
+
+    public void setRepository(UserRepository repository) {
+        this.repository = repository;
+    }
+
+    public void setValidator(Validator validator) {
+        this.validator = validator;
     }
 }

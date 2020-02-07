@@ -1,12 +1,12 @@
 package com.sergiovitorino.springbootjwt.application.command;
 
+import com.sergiovitorino.springbootjwt.application.command.user.CountCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.ListCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
+import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
+import com.sergiovitorino.springbootjwt.application.service.UserService;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
-import com.sergiovitorino.springbootjwt.application.service.UserService;
-import com.sergiovitorino.springbootjwt.application.command.user.CountCommand;
-import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -41,8 +41,8 @@ public class UserCommandHandler {
         return service.update(user);
     }
 
-
     public User execute(DisableUUIDCommand command) {
         return service.disable(command.getId());
     }
+
 }

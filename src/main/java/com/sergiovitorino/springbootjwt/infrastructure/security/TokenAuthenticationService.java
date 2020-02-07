@@ -29,7 +29,9 @@ public class TokenAuthenticationService {
 	@Autowired private UserRepository userRepository;
 
 	public void addAuthentication(HttpServletResponse res, String email) {
-		final User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+		final User user = userRepository.findByEmail(email);
+		if (user == null)
+			throw new IllegalArgumentException("User not found");
 		final Claims claims = Jwts.claims();
 		claims.put("authorities", extractAuthorities(user.getRole().getAuthorities()));
 		claims.put("Username", user.getUsername());

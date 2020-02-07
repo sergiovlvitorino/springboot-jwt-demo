@@ -9,7 +9,7 @@ public class SafeHtmlValidator implements ConstraintValidator<SafeHtml, String> 
 
     @Override
     public void initialize(SafeHtml constraintAnnotation) { }
-    
+
     @Override
     public boolean isValid(String html, ConstraintValidatorContext constraintValidatorContext) {
         return html == null || Jsoup.parse(html).text().equals(html);
