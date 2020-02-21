@@ -21,17 +21,12 @@ public class Validator {
         errors.add(ErrorBean.builder().message(message).build());
     }
 
-    public void parse(BindingResult bindingResult) {
-        if (bindingResult != null && bindingResult.hasErrors())
-            bindingResult.getFieldErrors().stream().forEach(fieldError -> errors.add(ErrorBean.builder().fieldError(fieldError.getField()).message(fieldError.getDefaultMessage()).build()));
-    }
-
     public List<ErrorBean> getErrors() {
         return this.errors;
     }
 
-    public boolean isValid() {
-        return errors.isEmpty();
+    public boolean isInvalid() {
+        return !errors.isEmpty();
     }
 
 

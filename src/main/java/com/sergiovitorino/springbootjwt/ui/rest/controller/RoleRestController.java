@@ -6,6 +6,7 @@ import com.sergiovitorino.springbootjwt.application.command.role.ListCommand;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
 import com.sergiovitorino.springbootjwt.infrastructure.ResponseEntityBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
@@ -27,13 +28,19 @@ public class RoleRestController {
     public ResponseEntity get(@Valid ListCommand command, BindingResult bindingResult) {
         if (bindingResult.hasErrors())
             return responseEntityBuilder.bindingResult(bindingResult).build();
-        return responseEntityBuilder.result(commandHandler.execute(command)).build();
+        return responseEntityBuilder
+                .result(commandHandler.execute(command))
+                .httpStatusError(HttpStatus.NOT_FOUND)
+                .build();
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
     @GetMapping("/count")
     public ResponseEntity get(CountCommand command) {
-        return responseEntityBuilder.result(commandHandler.execute(command)).build();
+        return responseEntityBuilder
+                .result(commandHandler.execute(command))
+                .httpStatusError(HttpStatus.NOT_FOUND)
+                .build();
     }
 
 }

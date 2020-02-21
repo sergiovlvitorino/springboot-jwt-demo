@@ -124,7 +124,7 @@ public class UserRestControllerTest {
         final HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 
         final User userCreated = mapper.readValue(responseEntity.getBody(), User.class);
         assertNotNull(userCreated);
@@ -173,11 +173,11 @@ public class UserRestControllerTest {
 
         HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
         ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 
         entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
         responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         final String exceptionMessageExpected = "E-mail already";
         final String exceptionMessageActual = errors.get(0).getMessage();
@@ -221,7 +221,7 @@ public class UserRestControllerTest {
         command.setName(UUID.randomUUID().toString());
         final HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.PUT, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
     }
 
     @Test
@@ -246,10 +246,10 @@ public class UserRestControllerTest {
     }
 
     @Test
-    public void testIfDisableUUIDCommandReturnsBadRequest2() throws Exception {
+    public void testIfDisableUUIDCommandReturnsNotFound() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/" + UUID.randomUUID().toString(), HttpMethod.DELETE, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
     @Test

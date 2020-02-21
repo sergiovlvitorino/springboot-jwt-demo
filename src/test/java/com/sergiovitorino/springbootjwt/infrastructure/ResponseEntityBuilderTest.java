@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +29,7 @@ public class ResponseEntityBuilderTest {
 
         ObjectMapper mapper = mock(ObjectMapper.class);
         JsonProcessingException mockJsonProcessingException = mock(JsonProcessingException.class);
-        when(mapper.writeValueAsString(any())).thenThrow(mockJsonProcessingException);
+        lenient().when(mapper.writeValueAsString(any())).thenThrow(mockJsonProcessingException);
         responseEntityBuilder.setMapper(mapper);
 
         try{

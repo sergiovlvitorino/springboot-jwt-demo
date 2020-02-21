@@ -20,7 +20,7 @@ public class RestExceptionHandler {
     @ExceptionHandler
     public ResponseEntity exceptionHandler(final Exception exception) throws Exception {
         log.log(Level.SEVERE, exception.getMessage());
-        final ErrorBean errorBean = ErrorBean.builder().className(exception.getClass().getName()).fieldError("").message(exception.getMessage()).build();
+        final ErrorBean errorBean = ErrorBean.builder().className(exception.getClass().getName()).message(exception.getMessage()).build();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapper.writeValueAsString(errorBean));
     }
 
