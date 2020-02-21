@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 
 import static org.mockito.Mockito.*;
 
@@ -34,7 +35,7 @@ public class ResponseEntityBuilderTest {
 
         try{
             validator.addError("Mock Error");
-            responseEntityBuilder.bindingResult(null).result(null).build();
+            responseEntityBuilder.bindingResult(null).httpStatusError(HttpStatus.CONFLICT).result(null).build();
             Assert.fail();
         }catch (IllegalArgumentException e){
             Assert.assertTrue(true);
