@@ -31,7 +31,8 @@ public class UserRestController {
     public ResponseEntity get(@Valid ListCommand command, BindingResult bindingResult) {
         if (bindingResult.hasErrors())
             return responseEntityBuilder.bindingResult(bindingResult).build();
-        return responseEntityBuilder.result(commandHandler.execute(command))
+        return responseEntityBuilder
+                .result(commandHandler.execute(command))
                 .httpStatusError(HttpStatus.NOT_FOUND)
                 .build();
     }

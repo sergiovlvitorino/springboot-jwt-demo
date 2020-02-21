@@ -28,7 +28,7 @@ public class ResponseEntityBuilder {
         try{
             httpStatus = httpStatus == null ? HttpStatus.OK : httpStatus;
 
-            if (bindingResult != null && bindingResult.hasErrors())
+            if (bindingResult != null)
                 return ResponseEntity.badRequest().body(mapper.writeValueAsString(parse(bindingResult)));
 
             if (validator.isInvalid())
