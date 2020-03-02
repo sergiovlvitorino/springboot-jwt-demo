@@ -15,7 +15,9 @@ import java.util.logging.Logger;
 public class RestExceptionHandler {
 
     private Logger log = Logger.getLogger(this.getClass().getName());
-    @Autowired private ObjectMapper mapper;
+
+    @Autowired
+    private ObjectMapper mapper;
 
     @ExceptionHandler
     public ResponseEntity exceptionHandler(final Exception exception) throws Exception {
@@ -24,6 +26,8 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapper.writeValueAsString(errorBean));
     }
 
-    public void setMapper(ObjectMapper mapper){ this.mapper = mapper; }
+    public void setMapper(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
 }

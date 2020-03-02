@@ -17,23 +17,23 @@ import java.util.Collections;
 
 public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
 
-	private TokenAuthenticationService tokenAuthenticationService;
+    private TokenAuthenticationService tokenAuthenticationService;
 
-	public JWTLoginFilter(String url, AuthenticationManager authManager, TokenAuthenticationService tokenAuthenticationService) {
-		super(new AntPathRequestMatcher(url));
-		setAuthenticationManager(authManager);
-		this.tokenAuthenticationService = tokenAuthenticationService;
-	}
+    public JWTLoginFilter(String url, AuthenticationManager authManager, TokenAuthenticationService tokenAuthenticationService) {
+        super(new AntPathRequestMatcher(url));
+        setAuthenticationManager(authManager);
+        this.tokenAuthenticationService = tokenAuthenticationService;
+    }
 
-	@Override
-	public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException, IOException {
-		AccountCredentials creds = new ObjectMapper().readValue(req.getInputStream(), AccountCredentials.class);
-		return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(creds.getUsername(),	creds.getPassword(), Collections.emptyList()));
-	}
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException, IOException {
+        AccountCredentials creds = new ObjectMapper().readValue(req.getInputStream(), AccountCredentials.class);
+        return getAuthenticationManager().authenticate(new UsernamePasswordAuthenticationToken(creds.getUsername(), creds.getPassword(), Collections.emptyList()));
+    }
 
-	@Override
-	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) {
-		tokenAuthenticationService.addAuthentication(res, auth.getName());
-	}
+    @Override
+    protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) {
+        tokenAuthenticationService.addAuthentication(res, auth.getName());
+    }
 
 }

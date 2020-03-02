@@ -28,10 +28,14 @@ import static org.junit.Assert.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserRestControllerTest {
 
-    @Autowired private ObjectMapper mapper;
-    @Autowired private TestRestTemplate restTemplete;
-    @LocalServerPort private Integer port;
-    @Autowired private RoleRepository roleRepository;
+    @Autowired
+    private ObjectMapper mapper;
+    @Autowired
+    private TestRestTemplate restTemplete;
+    @LocalServerPort
+    private Integer port;
+    @Autowired
+    private RoleRepository roleRepository;
     private static HttpHeaders headers;
 
     @Before
@@ -44,7 +48,7 @@ public class UserRestControllerTest {
     public void testIfListCommandReturnsBadRequestWhenPageNumberIsMinusOne() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=-1&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -54,16 +58,17 @@ public class UserRestControllerTest {
     public void testIfListCommandReturnsBadRequestWhenPageSizeIsMinusOne() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=-1&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
     }
+
     @Test
     public void testIfListCommandReturnsBadRequestWhenOrderByIsEmpty() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10000&orderBy=&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
         assertFalse(errors.isEmpty());
@@ -73,7 +78,7 @@ public class UserRestControllerTest {
     public void testIfListCommandReturnsBadRequestWhenAscIsInvalid() throws Exception {
         final HttpEntity<String> entity = new HttpEntity<String>(null, headers);
         final ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10000&orderBy=name&asc=aaa&user.enabled=true", HttpMethod.GET, entity, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST,responseEntity.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
         assertFalse(errors.isEmpty());

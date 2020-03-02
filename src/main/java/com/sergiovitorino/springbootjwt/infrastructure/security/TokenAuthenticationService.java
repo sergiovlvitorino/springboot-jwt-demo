@@ -21,71 +21,72 @@ import java.util.List;
 @Service
 public class TokenAuthenticationService {
 
-	public static final long EXPIRATIONTIME = 864_000_000; // 10 days
-	public static final String SECRET = "fajfasjFAHSKweroiv23";
-	public static final String TOKEN_PREFIX = "Bearer";
-	public static final String HEADER_STRING = "Authorization";
+    public static final long EXPIRATIONTIME = 864_000_000; // 10 days
+    public static final String SECRET = "fajfasjFAHSKweroiv23";
+    public static final String TOKEN_PREFIX = "Bearer";
+    public static final String HEADER_STRING = "Authorization";
 
-	@Autowired private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	public void addAuthentication(HttpServletResponse res, String email) {
-		final User user = userRepository.findByEmail(email);
-		if (user == null)
-			throw new IllegalArgumentException("User not found");
-		final Claims claims = Jwts.claims();
-		claims.put("authorities", extractAuthorities(user.getRole().getAuthorities()));
-		claims.put("Username", user.getUsername());
+    public void addAuthentication(HttpServletResponse res, String email) {
+        final User user = userRepository.findByEmail(email);
+        if (user == null)
+            throw new IllegalArgumentException("User not found");
+        final Claims claims = Jwts.claims();
+        claims.put("authorities", extractAuthorities(user.getRole().getAuthorities()));
+        claims.put("Username", user.getUsername());
 
-		final String JWT = Jwts.builder()
-				.setClaims(claims)
-				.setSubject(user.getId().toString())
-				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATIONTIME))
-				.signWith(SignatureAlgorithm.HS512, SECRET).compact();
-		res.addHeader(HEADER_STRING, TOKEN_PREFIX + " " + JWT);
-	}
+        final String JWT = Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getId().toString())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATIONTIME))
+                .signWith(SignatureAlgorithm.HS512, SECRET).compact();
+        res.addHeader(HEADER_STRING, TOKEN_PREFIX + " " + JWT);
+    }
 
-	public Authentication getAuthentication(HttpServletRequest request) {
-		try {
-			final String token = request.getHeader(HEADER_STRING);
-			if (token != null) {
-				final String userId = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().getSubject();
+    public Authentication getAuthentication(HttpServletRequest request) {
+        try {
+            final String token = request.getHeader(HEADER_STRING);
+            if (token != null) {
+                final String userId = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().getSubject();
 
-				if (userId == null)
-					throw new NullPointerException("UserId not found");
+                if (userId == null)
+                    throw new NullPointerException("UserId not found");
 
-				final String authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities"));
+                final String authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities"));
 
-				final String[] authoritiesSplitted = splitAuthorites(authorities);
-				final List<GrantedAuthority> authorityList = AuthorityUtils.createAuthorityList(authoritiesSplitted);
+                final String[] authoritiesSplitted = splitAuthorites(authorities);
+                final List<GrantedAuthority> authorityList = AuthorityUtils.createAuthorityList(authoritiesSplitted);
 
-				return new UsernamePasswordAuthenticationToken(userId, null, authorityList);
-			}
-		}catch(Exception e) {
-			return null;
-		}
-		return null;
-	}
+                return new UsernamePasswordAuthenticationToken(userId, null, authorityList);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
 
-	private String[] splitAuthorites(String text){
-		if (text == null)
-			return new String[0];
-		return text.split(",");
-	}
+    private String[] splitAuthorites(String text) {
+        if (text == null)
+            return new String[0];
+        return text.split(",");
+    }
 
-	private String extractAuthorities(final List<Authority> authorities){
-		final StringBuilder stringBuilder = new StringBuilder();
-		authorities.stream().forEach(permission -> {
-			stringBuilder.append(permission.getName());
-			stringBuilder.append(",");
-		});
-		return removeComma(stringBuilder.toString());
-	}
+    private String extractAuthorities(final List<Authority> authorities) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        authorities.stream().forEach(permission -> {
+            stringBuilder.append(permission.getName());
+            stringBuilder.append(",");
+        });
+        return removeComma(stringBuilder.toString());
+    }
 
-	public String removeComma(final String text){
-		if (text.isEmpty()){
-			return text;
-		}else{
-			return text.substring(0, text.length()-1);
-		}
-	}
+    public String removeComma(final String text) {
+        if (text.isEmpty()) {
+            return text;
+        } else {
+            return text.substring(0, text.length() - 1);
+        }
+    }
 }

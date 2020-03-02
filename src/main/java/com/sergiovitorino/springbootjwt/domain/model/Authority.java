@@ -24,13 +24,13 @@ public class Authority {
     private UUID id;
     private String name;
     @JoinTable(name = "role_authority", joinColumns = {
-            @JoinColumn(name = "authority_id", referencedColumnName = "id") }, inverseJoinColumns = {
-            @JoinColumn(name = "role_id", referencedColumnName = "id") })
+            @JoinColumn(name = "authority_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "role_id", referencedColumnName = "id")})
     @ManyToMany(cascade = CascadeType.DETACH)
     @JsonIgnore
     private List<Role> roles;
 
-    public Authority(String name){
+    public Authority(String name) {
         this.name = name;
     }
 

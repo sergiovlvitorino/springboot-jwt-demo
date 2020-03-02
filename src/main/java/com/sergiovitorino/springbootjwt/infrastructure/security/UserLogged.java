@@ -10,8 +10,8 @@ import java.util.UUID;
 @RequestScope
 public class UserLogged {
 
-	public UUID getUserId() {
-		return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
-	}
-	
+    public UUID getUserId() {
+        return UUID.fromString(SecurityContextHolder.getContext().getAuthentication().getName());
+    }
+
 }

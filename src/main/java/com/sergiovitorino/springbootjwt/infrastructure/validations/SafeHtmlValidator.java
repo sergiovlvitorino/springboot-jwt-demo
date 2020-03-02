@@ -8,7 +8,8 @@ import javax.validation.ConstraintValidatorContext;
 public class SafeHtmlValidator implements ConstraintValidator<SafeHtml, String> {
 
     @Override
-    public void initialize(SafeHtml constraintAnnotation) { }
+    public void initialize(SafeHtml constraintAnnotation) {
+    }
 
     @Override
     public boolean isValid(String html, ConstraintValidatorContext constraintValidatorContext) {

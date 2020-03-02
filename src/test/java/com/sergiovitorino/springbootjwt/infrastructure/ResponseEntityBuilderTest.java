@@ -18,12 +18,12 @@ import static org.mockito.Mockito.*;
 public class ResponseEntityBuilderTest {
 
     @Before
-    public void setUp(){
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void testIfResultChangesJsonProcessingExceptionToIllegalArgumentException() throws Exception{
+    public void testIfResultChangesJsonProcessingExceptionToIllegalArgumentException() throws Exception {
         ResponseEntityBuilder responseEntityBuilder = new ResponseEntityBuilder();
         Validator validator = new Validator();
         responseEntityBuilder.setValidator(validator);
@@ -33,11 +33,11 @@ public class ResponseEntityBuilderTest {
         lenient().when(mapper.writeValueAsString(any())).thenThrow(mockJsonProcessingException);
         responseEntityBuilder.setMapper(mapper);
 
-        try{
+        try {
             validator.addError("Mock Error");
             responseEntityBuilder.bindingResult(null).httpStatusError(HttpStatus.CONFLICT).result(null).build();
             Assert.fail();
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             Assert.assertTrue(true);
         }
     }

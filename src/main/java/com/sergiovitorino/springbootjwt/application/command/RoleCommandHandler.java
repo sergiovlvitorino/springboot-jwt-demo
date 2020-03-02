@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class RoleCommandHandler {
 
-    @Autowired private RoleService service;
+    @Autowired
+    private RoleService service;
 
     public Page<Role> execute(ListCommand command) {
         return service.findAll(command.getPageNumber(), command.getPageSize(), command.getOrderBy(), command.getAsc(), command.getRole() == null ? new Role() : command.getRole());

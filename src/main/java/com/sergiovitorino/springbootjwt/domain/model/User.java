@@ -49,7 +49,7 @@ public class User extends AbstractEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         final String[] authorities = new String[role.getAuthorities().size()];
-        for(int i = 0; i < role.getAuthorities().size(); i++)
+        for (int i = 0; i < role.getAuthorities().size(); i++)
             authorities[i] = role.getAuthorities().get(i).getName();
         return AuthorityUtils.createAuthorityList(authorities);
     }

@@ -29,13 +29,13 @@ public class Role {
     private List<User> users;
 
     @JoinTable(name = "role_authority", joinColumns = {
-            @JoinColumn(name = "role_id", referencedColumnName = "id") }, inverseJoinColumns = {
-            @JoinColumn(name = "authority_id", referencedColumnName = "id") })
+            @JoinColumn(name = "role_id", referencedColumnName = "id")}, inverseJoinColumns = {
+            @JoinColumn(name = "authority_id", referencedColumnName = "id")})
     @ManyToMany(cascade = CascadeType.DETACH, fetch = FetchType.EAGER)
     @Getter(AccessLevel.NONE)
     private List<Authority> authorities;
 
-    public Role(String name, List<Authority> authorities){
+    public Role(String name, List<Authority> authorities) {
         this.name = name;
         this.authorities = authorities;
     }

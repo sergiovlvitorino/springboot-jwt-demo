@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 public class RestExceptionHandlerTest {
 
     @Test
-    public void testIfExceptionParserIsOk() throws Exception{
+    public void testIfExceptionParserIsOk() throws Exception {
         RestExceptionHandler restExceptionHandler = new RestExceptionHandler();
         restExceptionHandler.setMapper(new ObjectMapper());
         ResponseEntity responseEntity = restExceptionHandler.exceptionHandler(new IllegalArgumentException("Mock Exception"));

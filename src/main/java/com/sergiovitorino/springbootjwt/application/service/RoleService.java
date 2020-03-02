@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoleService {
 
-    @Autowired private RoleRepository repository;
+    @Autowired
+    private RoleRepository repository;
 
     public Page<Role> findAll(Integer pageNumber, Integer pageSize, String orderBy, Boolean asc, Role role) {
         final Sort.Direction direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;

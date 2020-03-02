@@ -23,10 +23,14 @@ import static org.junit.Assert.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class RoleRestControllerTest {
 
-    @Autowired private ObjectMapper mapper;
-    @Autowired private TestRestTemplate restTemplete;
-    @LocalServerPort private Integer port;
-    @Autowired private RoleRepository roleRepository;
+    @Autowired
+    private ObjectMapper mapper;
+    @Autowired
+    private TestRestTemplate restTemplete;
+    @LocalServerPort
+    private Integer port;
+    @Autowired
+    private RoleRepository roleRepository;
     private static HttpHeaders headers;
 
     @Before

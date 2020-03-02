@@ -18,13 +18,17 @@ import java.util.UUID;
 @Component
 public class Initialize {
 
-    @Autowired private AuthorityRepository authorityRepository;
-    @Autowired private RoleRepository roleRepository;
-    @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private UserRepository userRepository;
+    @Autowired
+    private AuthorityRepository authorityRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostConstruct
-    public void execute(){
+    public void execute() {
 
         authorityRepository.save(new Authority(AuthorityConstants.USER_RETRIEVE));
         authorityRepository.save(new Authority(AuthorityConstants.ROLE_RETRIEVE));

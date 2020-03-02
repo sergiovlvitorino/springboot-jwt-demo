@@ -28,7 +28,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testIfLoadByUsernameReturnsNullWhenNotFound(){
+    public void testIfLoadByUsernameReturnsNullWhenNotFound() {
         String emailExpected = UUID.randomUUID().toString() + "@def.com";
         UserRepository repository = mock(UserRepository.class);
         when(repository.findByEmail(emailExpected)).thenReturn(null);

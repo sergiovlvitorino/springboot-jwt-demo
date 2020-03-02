@@ -14,29 +14,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-	@Autowired private PasswordEncoder passwordEncoder;
-	@Autowired private JWTAuthenticationFilter jwtAuthenticationFilter;
-	@Autowired private TokenAuthenticationService tokenAuthenticationService;
-	@Autowired private UserDetailsService userDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private JWTAuthenticationFilter jwtAuthenticationFilter;
+    @Autowired
+    private TokenAuthenticationService tokenAuthenticationService;
+    @Autowired
+    private UserDetailsService userDetailsService;
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		
-		JWTLoginFilter jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager(), tokenAuthenticationService);
-		
-		http.cors().and().csrf().disable();
-		http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-		http.authorizeRequests()
-			.antMatchers(HttpMethod.POST, "/login").permitAll()
-			.anyRequest().authenticated().and()
-				.addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
-				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
 
-	}
+        JWTLoginFilter jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager(), tokenAuthenticationService);
 
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
-	}
+        http.cors().and().csrf().disable();
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                .anyRequest().authenticated().and()
+                .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+    }
 
 }

@@ -23,17 +23,18 @@ import static org.mockito.Mockito.when;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TokenAuthenticationServiceTest {
 
-    @Autowired private TokenAuthenticationService service;
+    @Autowired
+    private TokenAuthenticationService service;
 
     @Test
-    public void testIfRemoveCommaIsOk(){
+    public void testIfRemoveCommaIsOk() {
         String expectedText = "";
         String actualText = service.removeComma("");
         assertEquals(expectedText, actualText);
     }
 
     @Test
-    public void testIfGetAuthenticationReturnsNullWhenUserIdIsNull(){
+    public void testIfGetAuthenticationReturnsNullWhenUserIdIsNull() {
         String token = Jwts.builder()
                 .setSubject(null)
                 .setExpiration(new Date(System.currentTimeMillis() + TokenAuthenticationService.EXPIRATIONTIME))
@@ -45,7 +46,7 @@ public class TokenAuthenticationServiceTest {
     }
 
     @Test
-    public void testIfGetAuthenticationReturnsNullWhenUserIdIsEmpty(){
+    public void testIfGetAuthenticationReturnsNullWhenUserIdIsEmpty() {
         String token = Jwts.builder()
                 .setSubject("")
                 .setExpiration(new Date(System.currentTimeMillis() + TokenAuthenticationService.EXPIRATIONTIME))
@@ -57,7 +58,7 @@ public class TokenAuthenticationServiceTest {
     }
 
     @Test
-    public void testIfGetAuthenticationReturnsNullWhenExpired(){
+    public void testIfGetAuthenticationReturnsNullWhenExpired() {
         String token = Jwts.builder()
                 .setSubject(UUID.randomUUID().toString())
                 .setExpiration(new Date(System.currentTimeMillis() - TokenAuthenticationService.EXPIRATIONTIME))
@@ -69,7 +70,7 @@ public class TokenAuthenticationServiceTest {
     }
 
     @Test
-    public void testIfGetAuthenticationReturnsAnAuthorizationObjectWhenAuthoritesAreEmpty(){
+    public void testIfGetAuthenticationReturnsAnAuthorizationObjectWhenAuthoritesAreEmpty() {
         String token = Jwts.builder()
                 .setSubject(UUID.randomUUID().toString())
                 .setExpiration(new Date(System.currentTimeMillis() + TokenAuthenticationService.EXPIRATIONTIME))
@@ -81,11 +82,11 @@ public class TokenAuthenticationServiceTest {
     }
 
     @Test
-    public void testIfAddAuthenticationThrowsIllegalArgumentExceptionWhenUsernameNotFound(){
-        try{
+    public void testIfAddAuthenticationThrowsIllegalArgumentExceptionWhenUsernameNotFound() {
+        try {
             service.addAuthentication(null, UUID.randomUUID().toString() + "@def.com");
             fail();
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             assertTrue(true);
         }
     }

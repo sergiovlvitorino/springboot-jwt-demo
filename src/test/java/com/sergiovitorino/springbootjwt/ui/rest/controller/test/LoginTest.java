@@ -52,7 +52,7 @@ public class LoginTest {
     }
 
     @Test
-    public void testIfHttpStatusReturnsForbiddenWhenTokenIsEmpty(){
+    public void testIfHttpStatusReturnsForbiddenWhenTokenIsEmpty() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
         headers.add("Authorization", "");

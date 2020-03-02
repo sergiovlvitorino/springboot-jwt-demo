@@ -20,8 +20,10 @@ import javax.validation.Valid;
 @RequestMapping("/rest/role")
 public class RoleRestController {
 
-    @Autowired private RoleCommandHandler commandHandler;
-    @Autowired private ResponseEntityBuilder responseEntityBuilder;
+    @Autowired
+    private RoleCommandHandler commandHandler;
+    @Autowired
+    private ResponseEntityBuilder responseEntityBuilder;
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
     @GetMapping
