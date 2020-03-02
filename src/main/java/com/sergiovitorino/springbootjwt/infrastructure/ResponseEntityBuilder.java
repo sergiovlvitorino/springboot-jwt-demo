@@ -21,12 +21,12 @@ public class ResponseEntityBuilder {
 
     private Object result;
     private BindingResult bindingResult;
-    private HttpStatus httpStatus;
+    private HttpStatus httpStatusSuccess;
     private HttpStatus httpStatusError;
 
     public ResponseEntity build(){
         try{
-            httpStatus = httpStatus == null ? HttpStatus.OK : httpStatus;
+            httpStatusSuccess = httpStatusSuccess == null ? HttpStatus.OK : httpStatusSuccess;
 
             if (bindingResult != null)
                 return ResponseEntity.badRequest().body(mapper.writeValueAsString(parse(bindingResult)));
@@ -34,7 +34,7 @@ public class ResponseEntityBuilder {
             if (validator.isInvalid())
                 return ResponseEntity.status(httpStatusError).body(mapper.writeValueAsString(validator.getErrors()));
 
-            return ResponseEntity.status(httpStatus).body(mapper.writeValueAsString(result));
+            return ResponseEntity.status(httpStatusSuccess).body(mapper.writeValueAsString(result));
         } catch (JsonProcessingException e){
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -46,8 +46,8 @@ public class ResponseEntityBuilder {
         return errors;
     }
 
-    public ResponseEntityBuilder httpStatus(HttpStatus httpStatus){
-        this.httpStatus = httpStatus;
+    public ResponseEntityBuilder httpStatusSuccess(HttpStatus httpStatusSuccess){
+        this.httpStatusSuccess = httpStatusSuccess;
         return this;
     }
 

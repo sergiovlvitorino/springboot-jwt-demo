@@ -55,7 +55,7 @@ public class UserRestController {
         return responseEntityBuilder
                 .result(commandHandler.execute(command))
                 .httpStatusError(HttpStatus.UNPROCESSABLE_ENTITY)
-                .httpStatus(HttpStatus.CREATED)
+                .httpStatusSuccess(HttpStatus.CREATED)
                 .build();
     }
 
