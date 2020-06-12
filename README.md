@@ -1,5 +1,5 @@
 # springboot-jwt-demo
-This example shows how to implement spring boot, spring security and JWT.
+This example shows a REST API using spring boot, spring security and Json Web Token(JWT). 
 
 [![Build Status](https://travis-ci.org/sergiovlvitorino/springboot-jwt-demo.svg?branch=master)](https://travis-ci.org/sergiovlvitorino/springboot-jwt-demo)
 
