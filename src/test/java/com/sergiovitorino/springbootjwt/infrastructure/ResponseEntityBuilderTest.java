@@ -24,12 +24,12 @@ public class ResponseEntityBuilderTest {
 
     @Test
     public void testIfResultChangesJsonProcessingExceptionToIllegalArgumentException() throws Exception {
-        ResponseEntityBuilder responseEntityBuilder = new ResponseEntityBuilder();
-        Validator validator = new Validator();
+        var responseEntityBuilder = new ResponseEntityBuilder();
+        var validator = new Validator();
         responseEntityBuilder.setValidator(validator);
 
-        ObjectMapper mapper = mock(ObjectMapper.class);
-        JsonProcessingException mockJsonProcessingException = mock(JsonProcessingException.class);
+        var mapper = mock(ObjectMapper.class);
+        var mockJsonProcessingException = mock(JsonProcessingException.class);
         lenient().when(mapper.writeValueAsString(any())).thenThrow(mockJsonProcessingException);
         responseEntityBuilder.setMapper(mapper);
 

@@ -5,7 +5,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 
 public class LoginHelper {
 
@@ -18,12 +17,12 @@ public class LoginHelper {
     }
 
     public HttpHeaders createAuthenticatedHeader(TestRestTemplate restTemplete, Integer port, String username, String password, String mediaType) {
-        String credencials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
-        HttpHeaders headers = new HttpHeaders();
+        var credencials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        var headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
-        HttpEntity<String> entity = new HttpEntity<String>(credencials, headers);
-        ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
-        String token = responseEntity.getHeaders().getFirst("Authorization");
+        var entity = new HttpEntity<String>(credencials, headers);
+        var responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
+        var token = responseEntity.getHeaders().getFirst("Authorization");
         headers.add("Authorization", token);
         headers.setContentType(MediaType.valueOf(mediaType));
         return headers;

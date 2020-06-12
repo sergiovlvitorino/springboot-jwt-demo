@@ -31,7 +31,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        User user = repository.findByEmail(email);
+        var user = repository.findByEmail(email);
         if (user == null) {
             validator.addError("User not found");
             return null;
@@ -40,26 +40,26 @@ public class UserService implements UserDetailsService {
     }
 
     public Page<User> findAll(Integer pageNumber, Integer pageSize, String orderBy, Boolean asc, User user) {
-        final Sort.Direction direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        final Sort sort = Sort.by(direction, orderBy);
-        final Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        final ExampleMatcher matcher = ExampleMatcher.matching()
+        final var direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;
+        final var sort = Sort.by(direction, orderBy);
+        final var pageable = PageRequest.of(pageNumber, pageSize, sort);
+        final var matcher = ExampleMatcher.matching()
                 .withIgnoreNullValues()
                 .withIgnoreCase();
-        final Example<User> example = Example.of(user, matcher);
+        final var example = Example.of(user, matcher);
         return repository.findAll(example, pageable);
     }
 
     public Long count(User user) {
-        final ExampleMatcher matcher = ExampleMatcher.matching()
+        final var matcher = ExampleMatcher.matching()
                 .withIgnoreNullValues()
                 .withIgnoreCase();
-        final Example<User> example = Example.of(user, matcher);
+        final var example = Example.of(user, matcher);
         return repository.count(example);
     }
 
     public User save(User user) {
-        User old = repository.findByEmail(user.getEmail());
+        var old = repository.findByEmail(user.getEmail());
         if (old != null) {
             validator.addError("E-mail already");
             return null;
@@ -72,7 +72,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User update(User user) {
-        User old = repository.findById(user.getId()).orElse(null);
+        var old = repository.findById(user.getId()).orElse(null);
         if (old == null) {
             validator.addError("User not found");
             return null;
@@ -84,7 +84,7 @@ public class UserService implements UserDetailsService {
     }
 
     public User disable(UUID id) {
-        User user = repository.findById(id).orElse(null);
+        var user = repository.findById(id).orElse(null);
         if (user == null) {
             validator.addError("User not found");
             return null;

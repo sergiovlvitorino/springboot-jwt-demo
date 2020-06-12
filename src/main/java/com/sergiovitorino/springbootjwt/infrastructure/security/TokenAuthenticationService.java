@@ -1,17 +1,14 @@
 package com.sergiovitorino.springbootjwt.infrastructure.security;
 
-import io.jsonwebtoken.Claims;
+import com.sergiovitorino.springbootjwt.domain.model.Authority;
+import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
-import com.sergiovitorino.springbootjwt.domain.model.Authority;
-import com.sergiovitorino.springbootjwt.domain.model.User;
-import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,14 +27,14 @@ public class TokenAuthenticationService {
     private UserRepository userRepository;
 
     public void addAuthentication(HttpServletResponse res, String email) {
-        final User user = userRepository.findByEmail(email);
+        final var user = userRepository.findByEmail(email);
         if (user == null)
             throw new IllegalArgumentException("User not found");
-        final Claims claims = Jwts.claims();
+        final var claims = Jwts.claims();
         claims.put("authorities", extractAuthorities(user.getRole().getAuthorities()));
         claims.put("Username", user.getUsername());
 
-        final String JWT = Jwts.builder()
+        final var JWT = Jwts.builder()
                 .setClaims(claims)
                 .setSubject(user.getId().toString())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATIONTIME))
@@ -47,17 +44,17 @@ public class TokenAuthenticationService {
 
     public Authentication getAuthentication(HttpServletRequest request) {
         try {
-            final String token = request.getHeader(HEADER_STRING);
+            final var token = request.getHeader(HEADER_STRING);
             if (token != null) {
-                final String userId = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().getSubject();
+                final var userId = Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().getSubject();
 
                 if (userId == null)
                     throw new NullPointerException("UserId not found");
 
-                final String authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities"));
+                final var authorities = ((String) Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token.replace(TOKEN_PREFIX, "")).getBody().get("authorities"));
 
-                final String[] authoritiesSplitted = splitAuthorites(authorities);
-                final List<GrantedAuthority> authorityList = AuthorityUtils.createAuthorityList(authoritiesSplitted);
+                final var authoritiesSplitted = splitAuthorites(authorities);
+                final var authorityList = AuthorityUtils.createAuthorityList(authoritiesSplitted);
 
                 return new UsernamePasswordAuthenticationToken(userId, null, authorityList);
             }
@@ -74,10 +71,9 @@ public class TokenAuthenticationService {
     }
 
     private String extractAuthorities(final List<Authority> authorities) {
-        final StringBuilder stringBuilder = new StringBuilder();
+        final var stringBuilder = new StringBuilder();
         authorities.stream().forEach(permission -> {
-            stringBuilder.append(permission.getName());
-            stringBuilder.append(",");
+            stringBuilder.append(permission.getName() + ",");
         });
         return removeComma(stringBuilder.toString());
     }

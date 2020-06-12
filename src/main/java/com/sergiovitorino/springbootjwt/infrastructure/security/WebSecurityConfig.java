@@ -26,8 +26,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
 
-        JWTLoginFilter jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager(), tokenAuthenticationService);
-
+        var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager(), tokenAuthenticationService);
         http.cors().and().csrf().disable();
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.authorizeRequests()

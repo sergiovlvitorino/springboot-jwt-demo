@@ -41,9 +41,9 @@ public class RoleRestControllerTest {
 
     @Test
     public void testIfListCommandReturnsOk() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
-        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        var jsonObject = new JSONObject(responseEntity.getBody());
         List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(list);
@@ -52,16 +52,16 @@ public class RoleRestControllerTest {
 
     @Test
     public void testIfListCommandReturnsBadRequest() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=-1&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=-1&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
     @Test
     public void testIfListCommandReturnsOk2() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
-        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
+        var jsonObject = new JSONObject(responseEntity.getBody());
         List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(list);
@@ -70,9 +70,9 @@ public class RoleRestControllerTest {
 
     @Test
     public void testIfListCommandReturnsOk3() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
-        JSONObject jsonObject = new JSONObject(responseEntity.getBody());
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
+        var jsonObject = new JSONObject(responseEntity.getBody());
         List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertNotNull(list);
@@ -81,28 +81,28 @@ public class RoleRestControllerTest {
 
     @Test
     public void testIfCountCommandReturnsOk() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count?role.name=GUEST", HttpMethod.GET, entity, String.class);
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count?role.name=GUEST", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Long countActual = Long.valueOf(responseEntity.getBody());
+        var countActual = Long.valueOf(responseEntity.getBody());
         assertTrue(countActual > 0);
     }
 
     @Test
     public void testIfCountCommandReturnsOk2() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count?role.name=GUEST1", HttpMethod.GET, entity, String.class);
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count?role.name=GUEST1", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Long countActual = Long.valueOf(responseEntity.getBody());
+        var countActual = Long.valueOf(responseEntity.getBody());
         assertTrue(countActual == 0L);
     }
 
     @Test
     public void testIfCountCommandReturnsOk3() throws Exception {
-        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
-        ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count", HttpMethod.GET, entity, String.class);
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role/count", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        Long countActual = Long.valueOf(responseEntity.getBody());
+        var countActual = Long.valueOf(responseEntity.getBody());
         assertTrue(countActual > 0);
     }
 

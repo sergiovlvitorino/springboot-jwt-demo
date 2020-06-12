@@ -1,22 +1,20 @@
 package com.sergiovitorino.springbootjwt.application.service;
 
-import com.sergiovitorino.springbootjwt.domain.model.User;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.UUID;
+
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.Validator;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.UUID;
-
-import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 @SpringBootTest
@@ -29,13 +27,13 @@ public class UserServiceTest {
 
     @Test
     public void testIfLoadByUsernameReturnsNullWhenNotFound() {
-        String emailExpected = UUID.randomUUID().toString() + "@def.com";
-        UserRepository repository = mock(UserRepository.class);
+        var emailExpected = UUID.randomUUID().toString() + "@def.com";
+        var repository = mock(UserRepository.class);
         when(repository.findByEmail(emailExpected)).thenReturn(null);
-        UserService service = new UserService();
+        var service = new UserService();
         service.setRepository(repository);
         service.setValidator(new Validator());
-        UserDetails result = service.loadUserByUsername(emailExpected);
+        var result = service.loadUserByUsername(emailExpected);
         Assert.assertNull(result);
     }
 

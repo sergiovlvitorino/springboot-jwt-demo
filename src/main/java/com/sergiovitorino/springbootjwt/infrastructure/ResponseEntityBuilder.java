@@ -43,8 +43,8 @@ public class ResponseEntityBuilder {
     }
 
     private List<ErrorBean> parse(BindingResult bindingResult) {
-        final List<ErrorBean> errors = new ArrayList<>();
-        bindingResult.getFieldErrors().stream().forEach(fieldError -> errors.add(ErrorBean.builder().fieldError(fieldError.getField()).message(fieldError.getDefaultMessage()).build()));
+        final var errors = new ArrayList<ErrorBean>();
+        bindingResult.getFieldErrors().parallelStream().forEach(fieldError -> errors.add(ErrorBean.builder().fieldError(fieldError.getField()).message(fieldError.getDefaultMessage()).build()));
         return errors;
     }
 

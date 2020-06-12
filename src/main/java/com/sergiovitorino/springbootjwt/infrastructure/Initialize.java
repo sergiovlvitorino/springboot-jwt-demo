@@ -35,9 +35,9 @@ public class Initialize {
         roleRepository.save(new Role("GUEST", authorityRepository.findAll()));
 
         authorityRepository.save(new Authority(AuthorityConstants.USER_SAVE));
-        final Role role = roleRepository.save(new Role("ADMIN", authorityRepository.findAll()));
+        final var role = roleRepository.save(new Role("ADMIN", authorityRepository.findAll()));
 
-        final User user = new User();
+        final var user = new User();
         user.setName("Lorem Ipsum");
         user.setEmail("abc@def.com");
         user.setEnabled(true);

@@ -27,14 +27,14 @@ public class LoginTest {
 
     @Test
     public void testIfHttpStatusIsForbiddenWhenLoginIsWrong() {
-        String username = UUID.randomUUID().toString();
-        String password = UUID.randomUUID().toString();
-        String credentials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
-        HttpHeaders headers = new HttpHeaders();
+        var username = UUID.randomUUID().toString();
+        var password = UUID.randomUUID().toString();
+        var credentials = "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        var headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_JSON_VALUE));
-        HttpEntity<String> entity = new HttpEntity<>(credentials, headers);
-        ResponseEntity<String> responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
-        HttpStatus statusCode = responseEntity.getStatusCode();
+        var entity = new HttpEntity<>(credentials, headers);
+        var responseEntity = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, entity, String.class);
+        var statusCode = responseEntity.getStatusCode();
         assertEquals(HttpStatus.FORBIDDEN, statusCode);
     }
 

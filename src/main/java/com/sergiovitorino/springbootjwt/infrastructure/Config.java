@@ -17,7 +17,7 @@ public class Config {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        final CorsConfiguration configuration = new CorsConfiguration();
+        final var configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "OPTIONS", "DELETE", "PATCH"));
@@ -26,7 +26,7 @@ public class Config {
         configuration.addAllowedHeader(AUTHORIZATION);
         configuration.addAllowedHeader("Access-Control-Allow-Origin");
         configuration.addAllowedHeader("Content-Type");
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
