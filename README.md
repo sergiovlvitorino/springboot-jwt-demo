@@ -8,7 +8,7 @@ This example shows how to implement spring boot, spring security and JWT.
 ## Getting Started
 
 ### Prerequisites
-* JDK 1.8
+* JDK 14
 * Maven 3
 
 ### Endpoints
