@@ -1,0 +1,548 @@
+{
+	"info": {
+		"_postman_id": "339fa892-1e1b-448e-8e41-20ee2da9cec4",
+		"name": "SpringJWTDemo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "List",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/rest/user?pageNumber=0&pageSize=10&orderBy=email&asc=true&user.enabled=true",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"user"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "orderBy",
+									"value": "email"
+								},
+								{
+									"key": "asc",
+									"value": "true"
+								},
+								{
+									"key": "user.enabled",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Count",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/rest/user/count?user.enabled=true",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"user",
+								"count"
+							],
+							"query": [
+								{
+									"key": "user.enabled",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disable",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/rest/user/count?id=252db2f2-65b8-4283-ad94-ca4b781744d4",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"user",
+								"count"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "252db2f2-65b8-4283-ad94-ca4b781744d4"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Save",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Sergio Vitorino\", \"email\":\"sergio@sergio.com\", \"password\":\"123456\", \"roleId\":\"8eed5071-f372-40ec-aee5-dd6396fda224\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/rest/user",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\":\"0a8b18af-8faa-4bd3-895d-6acb52b81f67\",\n    \"name\":\"John Doe\"\n}"
+						},
+						"url": {
+							"raw": "{{host}}/rest/user",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"username\":\"abc@def.com\",\"password\":\"123456\"}"
+						},
+						"url": {
+							"raw": "{{host}}/login",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "List",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/rest/role?pageNumber=0&pageSize=10&orderBy=name&asc=true",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"role"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "orderBy",
+									"value": "name"
+								},
+								{
+									"key": "asc",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Count",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const postRequest = {",
+									"  url: pm.environment.get(\"host\")+'/login',",
+									"  method: 'POST',",
+									"  header: 'Content-Type:application/json',",
+									"  body: {",
+									"    mode: 'application/json',",
+									"    raw: JSON.stringify(",
+									"        {",
+									"        \tusername:pm.environment.get(\"email\"),",
+									"        \tpassword:pm.environment.get(\"password\")",
+									"        })",
+									"  }",
+									"};",
+									"pm.sendRequest(postRequest, function(err, res) {",
+									"    pm.environment.set(\"token\", res.headers.get('Authorization'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/rest/role?pageNumber=0&pageSize=10&orderBy=name&asc=true",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"rest",
+								"role"
+							],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "orderBy",
+									"value": "name"
+								},
+								{
+									"key": "asc",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
