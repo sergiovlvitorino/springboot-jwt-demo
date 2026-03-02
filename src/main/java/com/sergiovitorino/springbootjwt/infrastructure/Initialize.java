@@ -7,46 +7,68 @@ import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.AuthorityRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.PostConstruct;
-import java.util.Calendar;
 import java.util.UUID;
 
 @Component
-public class Initialize {
+public class Initialize implements CommandLineRunner {
 
-    @Autowired
-    private AuthorityRepository authorityRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private UserRepository userRepository;
+    private static final Logger log = LoggerFactory.getLogger(Initialize.class);
 
-    @PostConstruct
-    public void execute() {
+    private final AuthorityRepository authorityRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final TransactionTemplate transactionTemplate;
 
-        authorityRepository.save(new Authority(AuthorityConstants.USER_RETRIEVE));
-        authorityRepository.save(new Authority(AuthorityConstants.ROLE_RETRIEVE));
-        roleRepository.save(new Role("GUEST", authorityRepository.findAll()));
-
-        authorityRepository.save(new Authority(AuthorityConstants.USER_SAVE));
-        final var role = roleRepository.save(new Role("ADMIN", authorityRepository.findAll()));
-
-        final var user = new User();
-        user.setName("Lorem Ipsum");
-        user.setEmail("abc@def.com");
-        user.setEnabled(true);
-        user.setPassword(passwordEncoder.encode("123456"));
-        user.setRole(role);
-        user.setDateCreatedAt(Calendar.getInstance());
-        user.setUserIdCreatedAt(UUID.randomUUID());
-        userRepository.save(user);
-
+    public Initialize(AuthorityRepository authorityRepository,
+                     RoleRepository roleRepository,
+                     PasswordEncoder passwordEncoder,
+                     UserRepository userRepository,
+                     TransactionTemplate transactionTemplate) {
+        this.authorityRepository = authorityRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+        this.transactionTemplate = transactionTemplate;
     }
 
+    @Override
+    public void run(String... args) throws Exception {
+        transactionTemplate.executeWithoutResult(status -> {
+            if (userRepository.count() > 0) {
+                log.info("Database already initialized, skipping seed data");
+                return;
+            }
+
+            log.info("Initializing database with seed data...");
+
+            authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_RETRIEVE));
+            authorityRepository.saveAndFlush(new Authority(AuthorityConstants.ROLE_RETRIEVE));
+            roleRepository.saveAndFlush(new Role("GUEST", authorityRepository.findAll()));
+            log.debug("Created GUEST role with authorities: {}, {}", AuthorityConstants.USER_RETRIEVE, AuthorityConstants.ROLE_RETRIEVE);
+
+            authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_SAVE));
+            Role adminRole = roleRepository.saveAndFlush(new Role("ADMIN", authorityRepository.findAll()));
+            log.debug("Created ADMIN role with all authorities");
+
+            User user = new User();
+            user.setName("Lorem Ipsum");
+            user.setEmail("abc@def.com");
+            user.setEnabled(true);
+            user.setPassword(passwordEncoder.encode("Test@1234"));
+            user.setRole(adminRole);
+            user.setUserIdCreatedAt(UUID.randomUUID());
+
+            userRepository.saveAndFlush(user);
+            log.info("Database initialization completed: created {} authorities, {} roles, {} admin user",
+                authorityRepository.count(), roleRepository.count(), userRepository.count());
+        });
+    }
 }

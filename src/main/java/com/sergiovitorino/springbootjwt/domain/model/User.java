@@ -1,30 +1,24 @@
 package com.sergiovitorino.springbootjwt.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
-@EqualsAndHashCode(callSuper = false)
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
 public class User extends AbstractEntity implements UserDetails {
 
     @Id
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @GeneratedValue(generator = "UUID")
-    @Type(type = "uuid-binary")
+    @JdbcTypeCode(java.sql.Types.BINARY)
     private UUID id;
 
     @Column(nullable = false)
@@ -33,12 +27,10 @@ public class User extends AbstractEntity implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Getter(AccessLevel.NONE)
     @Column(nullable = false)
     @JsonIgnore
     private String password;
 
-    @Getter(AccessLevel.NONE)
     private Boolean enabled;
 
     @ManyToOne
@@ -48,9 +40,12 @@ public class User extends AbstractEntity implements UserDetails {
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        final String[] authorities = new String[role.getAuthorities().size()];
-        for (int i = 0; i < role.getAuthorities().size(); i++)
-            authorities[i] = role.getAuthorities().get(i).getName();
+        if (role == null || role.getAuthorities() == null || role.getAuthorities().isEmpty()) {
+            return AuthorityUtils.createAuthorityList("ROLE_GUEST");
+        }
+        final String[] authorities = role.getAuthorities().stream()
+                .map(Authority::getName)
+                .toArray(String[]::new);
         return AuthorityUtils.createAuthorityList(authorities);
     }
 
@@ -81,9 +76,93 @@ public class User extends AbstractEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        if (enabled == null)
-            enabled = false;
+        return Boolean.TRUE.equals(enabled);
+    }
+
+    // Constructors
+    public User() {
+    }
+
+    public User(UUID id, String name, String email, String password, Boolean enabled, Role role) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.enabled = enabled;
+        this.role = role;
+    }
+
+    // Getters and Setters
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Boolean getEnabled() {
         return enabled;
     }
 
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return java.util.Objects.equals(id, user.id) &&
+               java.util.Objects.equals(name, user.name) &&
+               java.util.Objects.equals(email, user.email) &&
+               java.util.Objects.equals(enabled, user.enabled) &&
+               java.util.Objects.equals(role, user.role);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id, name, email, enabled, role);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", password='[PROTECTED]" +
+                ", enabled=" + enabled +
+                ", role=" + role +
+                "}";
+    }
 }
