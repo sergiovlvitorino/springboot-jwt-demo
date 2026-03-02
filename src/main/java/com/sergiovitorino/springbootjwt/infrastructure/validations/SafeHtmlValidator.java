@@ -1,11 +1,12 @@
 package com.sergiovitorino.springbootjwt.infrastructure.validations;
 
-import org.jsoup.Jsoup;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import java.util.regex.Pattern;
 
 public class SafeHtmlValidator implements ConstraintValidator<SafeHtml, String> {
+
+    private static final Pattern HTML_PATTERN = Pattern.compile("<[^>]+>");
 
     @Override
     public void initialize(SafeHtml constraintAnnotation) {
@@ -13,7 +14,7 @@ public class SafeHtmlValidator implements ConstraintValidator<SafeHtml, String> 
 
     @Override
     public boolean isValid(String html, ConstraintValidatorContext constraintValidatorContext) {
-        return html == null || Jsoup.parse(html).text().equals(html);
+        return html == null || !HTML_PATTERN.matcher(html).find();
     }
 
 }

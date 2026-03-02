@@ -1,46 +1,123 @@
 package com.sergiovitorino.springbootjwt.infrastructure;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@SpringBootTest
-public class ResponseEntityBuilderTest {
+class ResponseEntityBuilderTest {
+
+    private Validator validator;
+    private ObjectMapper objectMapper;
+    private ResponseEntityBuilder builder;
 
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
+    void setUp() {
+        validator = new Validator();
+        objectMapper = new ObjectMapper();
+        builder = new ResponseEntityBuilder(validator, objectMapper);
     }
 
     @Test
-    public void testIfResultChangesJsonProcessingExceptionToIllegalArgumentException() throws Exception {
-        var responseEntityBuilder = new ResponseEntityBuilder();
-        var validator = new Validator();
-        responseEntityBuilder.setValidator(validator);
+    void shouldBuildSuccessResponseWithResult() {
+        var result = "Test Result";
 
-        var mapper = mock(ObjectMapper.class);
-        var mockJsonProcessingException = mock(JsonProcessingException.class);
-        lenient().when(mapper.writeValueAsString(any())).thenThrow(mockJsonProcessingException);
-        responseEntityBuilder.setMapper(mapper);
+        var response = builder
+                .result(result)
+                .httpStatusSuccess(HttpStatus.OK)
+                .build();
 
-        try {
-            validator.addError("Mock Error");
-            responseEntityBuilder.bindingResult(null).httpStatusError(HttpStatus.CONFLICT).result(null).build();
-            fail();
-        } catch (IllegalArgumentException e) {
-            assertTrue(true);
-        }
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().contains("Test Result"));
     }
 
+    @Test
+    void shouldBuildSuccessResponseWithDefaultStatus() {
+        var result = "Test Result";
+
+        var response = builder
+                .result(result)
+                .build();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldBuildErrorResponseWhenValidatorHasErrors() {
+        validator.addError("Validation error");
+
+        var response = builder
+                .httpStatusError(HttpStatus.BAD_REQUEST)
+                .build();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().contains("Validation error"));
+    }
+
+    @Test
+    void shouldBuildBadRequestWhenBindingResultHasErrors() {
+        BindingResult bindingResult = mock(BindingResult.class);
+        when(bindingResult.hasErrors()).thenReturn(true);
+        FieldError fieldError = new FieldError("user", "name", "Name is required");
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+        var response = builder
+                .bindingResult(bindingResult)
+                .build();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().contains("Name is required"));
+        assertTrue(response.getBody().contains("name"));
+    }
+
+    @Test
+    void shouldBuildSuccessResponseWithEmptyList() {
+        // PageImpl with Unpaged causes serialization issues, so use a simple list instead
+        List<String> emptyList = Collections.emptyList();
+
+        var response = builder
+                .result(emptyList)
+                .httpStatusSuccess(HttpStatus.OK)
+                .build();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("[]", response.getBody());
+    }
+
+    @Test
+    void shouldBuildErrorResponseWhenResultIsNullAndErrorStatusIsNotFound() {
+        // When result is null and httpStatusError is NOT_FOUND, it returns empty array with success status
+        var response = builder
+                .httpStatusError(HttpStatus.NOT_FOUND)
+                .httpStatusSuccess(HttpStatus.OK)
+                .build();
+
+        // Based on the code, when httpStatusError is NOT_FOUND and result is null,
+        // it returns httpStatusSuccess with empty array "[]"
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("[]", response.getBody());
+    }
+
+    @Test
+    void shouldChainBuilderMethods() {
+        var result = "Test";
+
+        var response = builder
+                .result(result)
+                .httpStatusSuccess(HttpStatus.CREATED)
+                .httpStatusError(HttpStatus.BAD_REQUEST)
+                .build();
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    }
 }

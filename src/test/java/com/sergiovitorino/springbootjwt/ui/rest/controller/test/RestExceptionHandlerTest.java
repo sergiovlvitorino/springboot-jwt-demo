@@ -14,8 +14,7 @@ public class RestExceptionHandlerTest {
 
     @Test
     public void testIfExceptionParserIsOk() throws Exception {
-        var restExceptionHandler = new RestExceptionHandler();
-        restExceptionHandler.setMapper(new ObjectMapper());
+        var restExceptionHandler = new RestExceptionHandler(new ObjectMapper());
         var responseEntity = restExceptionHandler.exceptionHandler(new IllegalArgumentException("Mock Exception"));
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 
