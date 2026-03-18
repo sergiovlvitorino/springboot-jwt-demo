@@ -1,6 +1,9 @@
 package com.sergiovitorino.springbootjwt.infrastructure.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +24,22 @@ import java.util.stream.Collectors;
 @Configuration
 public class JwtConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtConfig.class);
+    private static final int MIN_SECRET_LENGTH = 32;
+
     @Value("${jwt.secret}")
     private String secret;
+
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.length() < MIN_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                "JWT secret must be at least " + MIN_SECRET_LENGTH + " characters for HS256. " +
+                "Set the JWT_SECRET environment variable with a sufficiently long value."
+            );
+        }
+        log.info("JWT secret validated: length={} (minimum={})", secret.length(), MIN_SECRET_LENGTH);
+    }
 
     @Bean
     public JwtDecoder jwtDecoder() {

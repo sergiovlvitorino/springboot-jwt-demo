@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,8 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class LoginRateLimitFilter extends OncePerRequestFilter {
 
-    private static final int MAX_ATTEMPTS = 10;
-    private static final long WINDOW_MILLIS = 60_000L;
+    static final int MAX_ATTEMPTS = 10;
+    static final long WINDOW_MILLIS = 60_000L;
+    private static final int MAX_CACHE_SIZE = 10_000;
 
     private final ConcurrentHashMap<String, Deque<Long>> attempts = new ConcurrentHashMap<>();
 
@@ -27,7 +29,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         if ("POST".equalsIgnoreCase(request.getMethod()) && "/login".equals(request.getServletPath())) {
-            String ip = getClientIp(request);
+            String ip = request.getRemoteAddr();
             if (isRateLimited(ip)) {
                 response.setStatus(429);
                 response.setContentType("application/json");
@@ -38,7 +40,10 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isRateLimited(String ip) {
+    boolean isRateLimited(String ip) {
+        if (attempts.size() >= MAX_CACHE_SIZE) {
+            evictExpiredEntries();
+        }
         long now = System.currentTimeMillis();
         Deque<Long> timestamps = attempts.computeIfAbsent(ip, k -> new ArrayDeque<>());
         synchronized (timestamps) {
@@ -53,11 +58,22 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+    @Scheduled(fixedRate = 60_000)
+    void evictExpiredEntries() {
+        long now = System.currentTimeMillis();
+        attempts.entrySet().removeIf(entry -> {
+            Deque<Long> timestamps = entry.getValue();
+            synchronized (timestamps) {
+                while (!timestamps.isEmpty() && now - timestamps.peekFirst() > WINDOW_MILLIS) {
+                    timestamps.pollFirst();
+                }
+                return timestamps.isEmpty();
+            }
+        });
+    }
+
+    // Visible for testing
+    ConcurrentHashMap<String, Deque<Long>> getAttempts() {
+        return attempts;
     }
 }

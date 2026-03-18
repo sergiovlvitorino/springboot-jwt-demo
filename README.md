@@ -7,16 +7,19 @@ A RESTful API demonstration using Spring Boot 3.5.5, Spring Security 6, and JSON
 
 ## Features
 
-- **JWT Authentication** - Stateless authentication via Spring OAuth2 Resource Server (Nimbus JOSE)
-- **Spring Security 6** - Role-based access control (RBAC) with `@PreAuthorize`
-- **Rate Limiting** - 10 login attempts per minute per IP (returns 429)
-- **Strong Password Validation** - Enforces secure password policies via custom validator
-- **Constructor Injection** - Immutable dependencies following best practices
-- **Structured Logging** - SLF4J with profile-specific levels
-- **Spring Profiles** - Environment-specific configurations (dev, test, prod)
-- **JaCoCo** - Code coverage reporting
-- **OpenAPI/Swagger** - API documentation at `/swagger-ui.html`
-- **Contract Testing** - Spring Cloud Contract support
+- **JWT Authentication** — Stateless authentication via Spring OAuth2 Resource Server (Nimbus JOSE)
+- **Spring Security 6** — Role-based access control (RBAC) with `@PreAuthorize`
+- **Rate Limiting** — 10 login attempts per minute per IP (returns 429)
+- **Strong Password Validation** — Enforces secure password policies via custom validator
+- **DTO Response Layer** — `UserResponse` record prevents entity leakage to API consumers
+- **Security Headers** — Referrer-Policy, X-Content-Type-Options, X-Frame-Options
+- **Constructor Injection** — Immutable dependencies following best practices
+- **Structured Logging** — SLF4J with profile-specific levels, PII masking
+- **Spring Profiles** — Environment-specific configurations (dev, test, prod)
+- **JaCoCo** — Code coverage reporting
+- **OpenAPI/Swagger** — API documentation (disabled in production)
+- **Contract Testing** — Spring Cloud Contract support
+- **Desktop Frontend** — Python/CustomTkinter desktop application
 
 ## Technology Stack
 
@@ -26,10 +29,12 @@ A RESTful API demonstration using Spring Boot 3.5.5, Spring Security 6, and JSON
 | Framework | Spring Boot 3.5.5 |
 | Security | Spring Security 6 + OAuth2 Resource Server |
 | JWT | Nimbus JOSE (via `spring-boot-starter-oauth2-resource-server`) |
-| Database (dev/test) | H2 in-memory |
-| Database (prod) | PostgreSQL |
+| Database (dev/test) | H2 in-memory (`runtime` scope) |
+| Database (prod) | PostgreSQL (`runtime` scope) |
 | Build | Maven 3.9+ |
-| Tests | JUnit 5 · Mockito · Spring Cloud Contract — **74 tests, 0 failures** |
+| Cloud | Spring Cloud 2024.0.1 |
+| Tests | JUnit 5, Mockito, Spring Cloud Contract — **99 tests, 0 failures** |
+| Frontend | Python 3, CustomTkinter, requests |
 
 ## Getting Started
 
@@ -38,6 +43,7 @@ A RESTful API demonstration using Spring Boot 3.5.5, Spring Security 6, and JSON
 - **JDK 21** or higher
 - **Maven 3.9+**
 - (Optional) PostgreSQL for production environment
+- (Optional) Python 3.10+ for the desktop frontend
 
 ### Installation
 
@@ -87,6 +93,19 @@ mvn clean test
 # Report: target/site/jacoco/index.html
 ```
 
+### Running the Desktop Frontend
+
+```bash
+cd frontend
+pip install -r requirements.txt
+
+# CLI mode
+python main.py
+
+# Desktop GUI mode
+python desktop_app.py
+```
+
 ## API Endpoints
 
 ### Authentication
@@ -97,6 +116,8 @@ mvn clean test
 
 ### User Management
 
+All user endpoints return `UserResponse` DTO (no password or internal fields exposed).
+
 | Method | Endpoint | Body | Description | Auth |
 |--------|----------|------|-------------|------|
 | POST | `/rest/user` | `{"name":"John","email":"john@example.com","password":"Test@1234","roleId":"uuid"}` | Create user | Yes |
@@ -104,6 +125,8 @@ mvn clean test
 | DELETE | `/rest/user/{id}` | — | Disable user | Yes |
 | GET | `/rest/user?pageNumber=0&pageSize=10&orderBy=name&asc=true` | — | List users (paginated) | Yes |
 | GET | `/rest/user/count` | — | Count users | Yes |
+
+**UserResponse fields**: `id`, `name`, `email`, `enabled`, `roleName`, `dateCreatedAt`, `dateUpdatedAt`
 
 ### Role Management
 
@@ -134,82 +157,96 @@ Password requirements enforced by `@StrongPassword`:
 
 | Variable | Required | Default (dev) | Description |
 |----------|----------|---------------|-------------|
-| `JWT_SECRET` | Prod | auto | HMAC-SHA256 signing key (min 32 chars) |
-| `JWT_EXPIRATION` | No | `864000000` (10d) | Token TTL in milliseconds |
+| `JWT_SECRET` | Prod | auto (52 chars) | HMAC-SHA256 signing key (min 32 chars — validated at startup) |
+| `JWT_EXPIRATION` | No | `3600000` (1h) | Token TTL in milliseconds |
 | `CORS_ALLOWED_ORIGINS` | Prod | `http://localhost:3000,http://localhost:4200` | Comma-separated allowed origins |
 | `DATABASE_URL` | Prod | H2 in-memory | JDBC connection URL |
 | `DATABASE_USERNAME` | Prod | — | Database username |
 | `DATABASE_PASSWORD` | Prod | — | Database password |
 
-> **Production note**: `JWT_SECRET` and `CORS_ALLOWED_ORIGINS` have **no default** in the `prod` profile — the application will fail to start if they are not set.
+> **Production note**: `JWT_SECRET` and `CORS_ALLOWED_ORIGINS` have **no default** in the `prod` profile — the application will fail to start if they are not set. `JWT_SECRET` must be at least 32 characters.
 
 ### Application Profiles
 
-| Profile | Database | H2 Console | Logging | Actuator | Health details |
-|---------|----------|------------|---------|----------|----------------|
-| `dev` | H2 in-memory | Enabled at `/h2-console` | DEBUG | health, info, metrics, env, beans, loggers | always |
-| `test` | H2 in-memory | Disabled | WARN | health | never |
-| `prod` | PostgreSQL | Disabled | INFO | health, metrics | when-authorized |
+| Profile | Database | H2 Console | Logging | Actuator | Swagger |
+|---------|----------|------------|---------|----------|---------|
+| `dev` | H2 in-memory | Enabled at `/h2-console` | DEBUG | health, info, metrics, env, beans, loggers | Enabled |
+| `test` | H2 in-memory | Disabled | WARN | health | Enabled |
+| `prod` | PostgreSQL | Disabled | INFO | health, metrics | **Disabled** |
 
 ## Security Features
 
-1. **JWT via Spring OAuth2 Resource Server** — `BearerTokenAuthenticationFilter` validates tokens using Nimbus JOSE; no third-party JWT library required
-2. **Login Rate Limiting** — `LoginRateLimitFilter` blocks IPs after 10 failed attempts per 60s (HTTP 429), honours `X-Forwarded-For`
-3. **CORS** — Explicit allowed-origins list; `allowCredentials` disabled (not needed for Bearer tokens)
-4. **Password Encryption** — BCrypt hashing via `BCryptPasswordEncoder`
-5. **Strong Password Policy** — Enforced at request time via `@StrongPassword` + `ConstraintValidator`
-6. **XSS Protection** — `@SafeHtml` strips HTML tags via regex before persistence
-7. **H2 Console Isolation** — `DevSecurityConfig` creates a dedicated security chain (`@Order(1)`) for `/h2-console/**` only active in `dev` profile
-8. **Secrets Externalization** — No hardcoded credentials; `jwt.secret` fails fast in `prod` without `JWT_SECRET`
-9. **Generic 500 Responses** — `RestExceptionHandler` returns `"An unexpected error occurred"` — no exception class or stack trace leaked to clients
-10. **Role-Based Access Control** — Fine-grained `@PreAuthorize` on service methods
+1. **JWT via Spring OAuth2 Resource Server** — `BearerTokenAuthenticationFilter` validates tokens using Nimbus JOSE
+2. **Login Rate Limiting** — `LoginRateLimitFilter` blocks IPs after 10 attempts per 60s (HTTP 429) with scheduled cache cleanup and max 10k entries
+3. **IP Source Validation** — Uses `request.getRemoteAddr()` only — does NOT trust `X-Forwarded-For` (configure `server.forward-headers-strategy` for trusted proxy)
+4. **DTO Response Layer** — `UserResponse` record prevents entity/password/internal field leakage
+5. **Generic Error Responses** — Error codes (`NOT_FOUND`, `BUSINESS_ERROR`) instead of Java class names; 500 returns `"An unexpected error occurred"` with no detail leak
+6. **Security Headers** — Referrer-Policy (strict-origin-when-cross-origin), X-Content-Type-Options (nosniff), X-Frame-Options (DENY)
+7. **Actuator Restriction** — Only `/actuator/health` and `/actuator/info` are publicly accessible; all others require authentication
+8. **Swagger Disabled in Prod** — `springdoc.api-docs.enabled=false` in production profile
+9. **PII Masking** — Failed login attempts log masked email (`a***@def.com`) instead of full address
+10. **JWT Secret Validation** — `@PostConstruct` validates `jwt.secret` >= 32 characters at startup — fails fast if too short
+11. **CORS** — Explicit allowed-origins list; `allowCredentials` not set (not needed for Bearer tokens)
+12. **Password Encryption** — BCrypt hashing via `BCryptPasswordEncoder`
+13. **Strong Password Policy** — Enforced at request time via `@StrongPassword` + `ConstraintValidator`
+14. **XSS Protection** — `@SafeHtml` strips HTML tags via regex before persistence
+15. **Secrets Externalization** — No hardcoded credentials; prod profile fails fast without `JWT_SECRET`
 
 ## Architecture
 
 ```
 src/main/java/com/sergiovitorino/springbootjwt/
 ├── application/
-│   ├── command/          # Request DTOs (Java Records)
-│   └── service/          # Business logic (UserService, RoleService)
+│   ├── command/
+│   │   ├── user/                  # SaveCommand, UpdateCommand, UserResponse, CountCommand, ListCommand
+│   │   └── role/                  # CountCommand, ListCommand
+│   └── service/                   # UserService, RoleService
 ├── domain/
-│   ├── exception/        # BusinessException, EmailAlreadyExistsException, ResourceNotFoundException
-│   ├── model/            # JPA entities (User, Role, Authority)
-│   └── repository/       # Spring Data JPA repositories
+│   ├── exception/                 # BusinessException, EmailAlreadyExistsException, ResourceNotFoundException
+│   ├── model/                     # User (@UuidGenerator), Role, Authority, AbstractEntity
+│   └── repository/                # Spring Data JPA repositories
 ├── infrastructure/
 │   ├── security/
-│   │   ├── JwtConfig.java              # JwtDecoder, JwtEncoder, JwtAuthenticationConverter beans
-│   │   ├── WebSecurityConfig.java      # Main security filter chain (@Order 2)
+│   │   ├── JwtConfig.java              # JwtDecoder, JwtEncoder, secret validation (@PostConstruct)
+│   │   ├── WebSecurityConfig.java      # Main security chain (@Order 2), headers, actuator/swagger rules
 │   │   ├── DevSecurityConfig.java      # H2 console chain, @Profile("dev") @Order(1)
-│   │   ├── LoginRateLimitFilter.java   # 10 req/min per IP on POST /login
-│   │   ├── JWTLoginFilter.java         # Handles /login and issues JWT
-│   │   ├── TokenAuthenticationService.java  # Builds JwtClaimsSet and writes Authorization header
-│   │   └── UserLogged.java             # Resolves authenticated user UUID from SecurityContext
-│   ├── validations/      # @SafeHtml, @StrongPassword validators
-│   ├── Config.java        # CORS configuration
-│   ├── Initialize.java    # Database seed (dev/test)
-│   └── OpenApiConfig.java # Swagger / OpenAPI 3 configuration
+│   │   ├── LoginRateLimitFilter.java   # 10 req/min per IP, @Scheduled cleanup, max 10k cache
+│   │   ├── JWTLoginFilter.java         # Handles /login, PII masking in logs
+│   │   ├── TokenAuthenticationService.java
+│   │   └── UserLogged.java
+│   ├── validations/               # @SafeHtml, @StrongPassword validators
+│   ├── Config.java                # CORS + PasswordEncoder
+│   ├── Initialize.java            # Database seed (dev/test)
+│   └── OpenApiConfig.java         # Swagger / OpenAPI 3 configuration
 └── ui/rest/controller/
-    ├── UserRestController.java
+    ├── UserRestController.java    # Returns UserResponse DTO
     ├── RoleRestController.java
-    └── RestExceptionHandler.java
+    └── RestExceptionHandler.java  # Error codes, no class name leak
+
+frontend/                          # Python desktop client
+├── api_client.py                  # HTTP client for all API endpoints
+├── main.py                        # CLI interface
+├── desktop_app.py                 # CustomTkinter GUI
+└── requirements.txt
 ```
 
 ## API Documentation
 
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI spec: `http://localhost:8080/v3/api-docs`
+- Swagger UI: `http://localhost:8080/swagger-ui.html` (dev only)
+- OpenAPI spec: `http://localhost:8080/v3/api-docs` (dev only)
 
 ## Testing
 
 ```
-74 tests — 0 failures
+99 tests — 0 failures
 ```
 
 | Category | Examples |
 |----------|---------|
-| Unit | Service, command handler, validator, domain model |
-| Integration | Repository, REST controller, security |
+| Unit | Service, command handler, validator, domain model, rate limiter, email masking, DTO mapping |
+| Integration | Repository, REST controller, security config, JWT config |
 | Contract | Spring Cloud Contract (shouldReturnUser) |
+| Security | Actuator access, error code format, no class name leak, no password in response |
 
 ## Development
 
@@ -224,8 +261,9 @@ mvn clean package -DskipTests  # Skip tests
 ### Code Quality
 
 - Constructor injection with `final` fields
-- SLF4J structured logging (no `System.out`)
-- Java Records for request DTOs
+- SLF4J structured logging (no `System.out`, PII masking)
+- Java Records for request/response DTOs
+- `@UuidGenerator` (Hibernate 6+) for entity IDs
 - Custom `ConstraintValidator` for domain validation
 - JaCoCo for coverage reporting
 
@@ -242,9 +280,18 @@ Password: (empty)
 
 ### JWT Secret missing on startup
 
-If you see `Could not resolve placeholder 'JWT_SECRET'`, you are running with the `prod` profile without the environment variable set. Either:
+If you see `JWT secret must be at least 32 characters`, either:
 - Switch to `dev` profile (`-Dspring-boot.run.profiles=dev`), or
-- Set `export JWT_SECRET=<your-secret>` before starting
+- Set `export JWT_SECRET=<your-secret-at-least-32-chars>` before starting
+
+### Postman Collection
+
+Import the files from the `postman/` directory:
+- `SpringJWTDemo.postman_collection.json` — all endpoints with auto-login pre-request scripts
+- `LOCAL.postman_environment.json` — localhost:8080
+- `DEV.postman_environment.json` — remote dev server
+
+The collection auto-saves `token` and `roleId` via test scripts.
 
 ## Contributing
 
@@ -264,28 +311,40 @@ This project is licensed under the GPL-3.0 License — see the [LICENSE.md](LICE
 
 ## Changelog
 
-### Current
+### v3 — Security Hardening
 
-- Replaced `jjwt` with `spring-boot-starter-oauth2-resource-server` (Nimbus JOSE) — one less third-party JWT dependency
-- Replaced `MapStruct` with inline manual mapping — removed annotation processor complexity
-- Replaced `jsoup` HTML sanitization with regex pattern — no external parser needed
-- Added `LoginRateLimitFilter` — brute-force protection on `/login`
-- Added `DevSecurityConfig` — isolated H2 console security chain for dev profile
-- Fixed CORS: removed `allowCredentials(true)` wildcard, origins now configurable via env var
-- Fixed JWT key derivation: explicit `StandardCharsets.UTF_8` in `SecretKeySpec`
-- Fixed health endpoint: `show-details=when-authorized` (was `always`)
-- Fixed `RestExceptionHandler`: generic 500 body — no internal details leaked
-- Fixed `User.equals/hashCode`: removed `password` field (BCrypt hash must not define identity)
-- Fixed multipart limits: `10MB` instead of `-1` (unlimited)
-- Fixed GitHub Actions: upgraded to `actions/checkout@v4`, `actions/setup-java@v4`, JDK 21, Maven cache
+- Fixed 14 security vulnerabilities (3 critical, 5 high, 4 medium, 4 low)
+- Upgraded Spring Cloud `2023.0.0` → `2024.0.1` (compatible with Boot 3.5.5)
+- Added PostgreSQL driver, scoped H2 to `runtime`
+- Restricted actuator to `/health` + `/info` only (was `/**`)
+- Disabled Swagger in production profile
+- Added security headers (Referrer-Policy, X-Content-Type-Options, X-Frame-Options)
+- Fixed rate limiter: removed X-Forwarded-For trust, added scheduled cleanup + max cache size
+- Added JWT secret minimum length validation (32 chars, fails fast at startup)
+- Created `UserResponse` DTO — User entity no longer returned directly in API responses
+- Replaced error class names with error codes (`NOT_FOUND`, `BUSINESS_ERROR`, etc.)
+- Masked PII in login failure logs (`a***@def.com`)
+- Replaced deprecated `@GenericGenerator` with `@UuidGenerator` (Hibernate 6+)
+- Lowered default token expiration from 10 days to 1 hour
+- Added `@EnableScheduling` for rate limiter cache cleanup
+- Added `jwt.secret` to test profile
+- 99 tests (25 new security tests), 0 failures
 
-### Previous
+### v2 — Library Modernization
+
+- Replaced `jjwt` with `spring-boot-starter-oauth2-resource-server` (Nimbus JOSE)
+- Replaced `MapStruct` with inline manual mapping
+- Replaced `jsoup` HTML sanitization with regex pattern
+- Added `LoginRateLimitFilter`, `DevSecurityConfig`, `JwtConfig`
+- Fixed CORS, JWT key derivation, health endpoint, exception handler
+- Fixed `User.equals/hashCode`: removed `password` field
+- Fixed multipart limits, GitHub Actions workflow
+
+### v1 — Initial
 
 - Externalized JWT secret to environment variables
 - Implemented strong password validation
 - Migrated to SLF4J structured logging
 - Refactored to constructor injection pattern
 - Added Spring Profiles support (dev, test, prod)
-- Added JaCoCo code coverage
-- Added OpenAPI/Swagger documentation
-- Added Spring Cloud Contract testing
+- Added JaCoCo, OpenAPI/Swagger, Spring Cloud Contract

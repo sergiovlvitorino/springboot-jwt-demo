@@ -1,8 +1,8 @@
 package com.sergiovitorino.springbootjwt.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,8 +16,8 @@ import java.util.UUID;
 public class User extends AbstractEntity implements UserDetails {
 
     @Id
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue
+    @UuidGenerator
     @JdbcTypeCode(java.sql.Types.BINARY)
     private UUID id;
 
