@@ -1,9 +1,6 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
-import com.sergiovitorino.springbootjwt.application.command.user.CountCommand;
-import com.sergiovitorino.springbootjwt.application.command.user.ListCommand;
-import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
-import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
+import com.sergiovitorino.springbootjwt.application.command.user.*;
 import com.sergiovitorino.springbootjwt.application.service.UserService;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
@@ -48,9 +45,10 @@ public class UserRestController {
     })
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_RETRIEVE + "')")
     @GetMapping
-    public ResponseEntity<Page<User>> get(@Valid ListCommand command) {
+    public ResponseEntity<Page<UserResponse>> get(@Valid ListCommand command) {
         log.debug("GET /rest/user - Listing users: page={}, size={}", command.pageNumber(), command.pageSize());
-        return ResponseEntity.ok(userService.findAll(command.pageNumber(), command.pageSize(), command.orderBy(), command.asc(), command.user() == null ? new User() : command.user()));
+        Page<User> page = userService.findAll(command.pageNumber(), command.pageSize(), command.orderBy(), command.asc(), command.user() == null ? new User() : command.user());
+        return ResponseEntity.ok(page.map(UserResponse::from));
     }
 
     @Operation(summary = "Count users", description = "Returns the total number of users matching the criteria.")
@@ -68,7 +66,7 @@ public class UserRestController {
     })
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PostMapping
-    public ResponseEntity<User> post(@RequestBody @Valid SaveCommand command) {
+    public ResponseEntity<UserResponse> post(@RequestBody @Valid SaveCommand command) {
         log.debug("POST /rest/user - Creating user with email: {}", command.email());
         var user = new User();
         user.setName(command.name());
@@ -79,7 +77,7 @@ public class UserRestController {
             return new ResourceNotFoundException("Role not found");
         });
         user.setRole(role);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.save(user));
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(userService.save(user)));
     }
 
     @Operation(summary = "Update an existing user", description = "Updates an existing user's name.")
@@ -89,12 +87,12 @@ public class UserRestController {
     })
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PutMapping
-    public ResponseEntity<User> put(@RequestBody @Valid UpdateCommand command) {
+    public ResponseEntity<UserResponse> put(@RequestBody @Valid UpdateCommand command) {
         log.debug("PUT /rest/user - Updating user: id={}", command.id());
         var user = new User();
         user.setId(command.id());
         user.setName(command.name());
-        return ResponseEntity.ok(userService.update(user));
+        return ResponseEntity.ok(UserResponse.from(userService.update(user)));
     }
 
     @Operation(summary = "Disable a user", description = "Disables a user by their ID.")
@@ -104,9 +102,9 @@ public class UserRestController {
     })
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<User> delete(@PathVariable UUID id) {
+    public ResponseEntity<UserResponse> delete(@PathVariable UUID id) {
         log.debug("DELETE /rest/user/{} - Disabling user", id);
-        return ResponseEntity.ok(userService.disable(id));
+        return ResponseEntity.ok(UserResponse.from(userService.disable(id)));
     }
 
 }

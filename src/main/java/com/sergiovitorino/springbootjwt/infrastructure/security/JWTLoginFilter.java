@@ -32,32 +32,30 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest req, HttpServletResponse res) throws AuthenticationException, IOException {
         final var accountCredentials = new ObjectMapper().readValue(req.getInputStream(), AccountCredentials.class);
-        String clientIp = getClientIp(req);
-        log.debug("Login attempt for user: {} from IP: {}", accountCredentials.username(), clientIp);
+        String clientIp = req.getRemoteAddr();
+        log.debug("Login attempt from IP: {}", clientIp);
 
         try {
             return getAuthenticationManager().authenticate(
                 new UsernamePasswordAuthenticationToken(accountCredentials.username(), accountCredentials.password(), Collections.emptyList())
             );
         } catch (AuthenticationException e) {
-            log.warn("Login failed for user: {} from IP: {} - Reason: {}", accountCredentials.username(), clientIp, e.getMessage());
+            log.warn("Login failed from IP: {} - Reason: {}", clientIp, e.getMessage());
             throw e;
         }
     }
 
     @Override
     protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) {
-        String clientIp = getClientIp(req);
-        log.info("Login successful for user: {} from IP: {}", auth.getName(), clientIp);
+        String clientIp = req.getRemoteAddr();
+        log.info("Login successful for user: {} from IP: {}", maskEmail(auth.getName()), clientIp);
         tokenAuthenticationService.addAuthentication(res, auth.getName());
     }
 
-    private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+    static String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return "***";
+        int atIndex = email.indexOf('@');
+        if (atIndex <= 1) return "*" + email.substring(atIndex);
+        return email.charAt(0) + "***" + email.substring(atIndex);
     }
-
 }

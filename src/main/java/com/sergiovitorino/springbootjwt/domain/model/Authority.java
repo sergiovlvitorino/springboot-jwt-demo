@@ -1,8 +1,8 @@
 package com.sergiovitorino.springbootjwt.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UuidGenerator;
 
 import jakarta.persistence.*;
 import java.util.List;
@@ -12,8 +12,8 @@ import java.util.UUID;
 public class Authority {
 
     @Id
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue
+    @UuidGenerator
     @JdbcTypeCode(java.sql.Types.BINARY)
     private UUID id;
     private String name;

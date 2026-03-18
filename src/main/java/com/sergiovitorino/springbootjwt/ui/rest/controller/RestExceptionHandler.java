@@ -32,23 +32,23 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException exception) throws Exception {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, exception);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, "NOT_FOUND", exception);
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException exception) throws Exception {
-        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, exception);
+        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, "EMAIL_ALREADY_EXISTS", exception);
     }
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<String> handleBusinessException(BusinessException exception) throws Exception {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, exception);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "BUSINESS_ERROR", exception);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<String> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException exception) throws Exception {
         log.warn("Invalid argument type: {}", exception.getMessage());
-        List<ErrorBean> errors = Collections.singletonList(new ErrorBean(exception.getClass().getName(), null, "Invalid UUID format"));
+        List<ErrorBean> errors = Collections.singletonList(new ErrorBean("INVALID_ARGUMENT", null, "Invalid UUID format"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapper.writeValueAsString(errors));
     }
 
@@ -77,8 +77,8 @@ public class RestExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mapper.writeValueAsString(errors));
     }
 
-    private ResponseEntity<String> buildErrorResponse(HttpStatus status, Exception exception) throws Exception {
-        List<ErrorBean> errors = Collections.singletonList(new ErrorBean(exception.getClass().getName(), null, exception.getMessage()));
+    private ResponseEntity<String> buildErrorResponse(HttpStatus status, String errorCode, Exception exception) throws Exception {
+        List<ErrorBean> errors = Collections.singletonList(new ErrorBean(errorCode, null, exception.getMessage()));
         return ResponseEntity.status(status).body(mapper.writeValueAsString(errors));
     }
 

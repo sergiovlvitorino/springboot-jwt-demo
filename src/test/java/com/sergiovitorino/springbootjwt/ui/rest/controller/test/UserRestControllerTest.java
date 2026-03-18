@@ -3,8 +3,8 @@ package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.application.command.user.UpdateCommand;
+import com.sergiovitorino.springbootjwt.application.command.user.UserResponse;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
-import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
 import com.sergiovitorino.springbootjwt.infrastructure.util.LoginHelper;
@@ -90,11 +90,10 @@ public class UserRestControllerTest {
         final var entity = new HttpEntity<String>(null, headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        
-        // Verificar se a resposta é um objeto JSON válido
+
         final JSONObject jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        final List<User> users = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        final List<UserResponse> users = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, UserResponse.class));
         assertNotNull(users);
         assertFalse(users.isEmpty());
     }
@@ -105,13 +104,11 @@ public class UserRestControllerTest {
         final var entity = new HttpEntity<String>(null, headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=false&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        
-        // Verificar se a resposta é um objeto JSON válido
+
         final var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        final List<User> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        final List<UserResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, UserResponse.class));
         assertNotNull(list);
-        // Lista pode estar vazia ou não, ambos são válidos
     }
 
     @Test
@@ -119,13 +116,11 @@ public class UserRestControllerTest {
         final var entity = new HttpEntity<String>(null, headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        
-        // Verificar se a resposta é um objeto JSON válido
+
         final JSONObject jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        final List<User> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, User.class));
+        final List<UserResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, UserResponse.class));
         assertNotNull(list);
-        // Lista pode estar vazia ou não, ambos são válidos
     }
 
     @Test
@@ -138,10 +133,12 @@ public class UserRestControllerTest {
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
 
-        final var userCreated = mapper.readValue(responseEntity.getBody(), User.class);
+        final var userCreated = mapper.readValue(responseEntity.getBody(), UserResponse.class);
         assertNotNull(userCreated);
-        assertNotNull(userCreated.getId());
-        assertEquals(command.name(), userCreated.getName());
+        assertNotNull(userCreated.id());
+        assertEquals(command.name(), userCreated.name());
+        // Ensure password is NOT in response
+        assertFalse(responseEntity.getBody().contains("password"));
     }
 
     @Test
@@ -186,24 +183,24 @@ public class UserRestControllerTest {
 
     @Test
     public void testIfUpdateCommandReturnsOk() throws Exception {
-        final User userSaved = createUser();
-        final UpdateCommand command = new UpdateCommand(userSaved.getId(), UUID.randomUUID().toString());
+        final UserResponse userSaved = createUser();
+        final UpdateCommand command = new UpdateCommand(userSaved.id(), UUID.randomUUID().toString());
 
         final var entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.PUT, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        final User userUpdated = mapper.readValue(responseEntity.getBody(), User.class);
+        final UserResponse userUpdated = mapper.readValue(responseEntity.getBody(), UserResponse.class);
         assertNotNull(userUpdated);
-        assertNotNull(userUpdated.getId());
-        assertEquals(userSaved.getId(), userUpdated.getId());
-        assertNotEquals(userSaved.getName(), userUpdated.getName());
+        assertNotNull(userUpdated.id());
+        assertEquals(userSaved.id(), userUpdated.id());
+        assertNotEquals(userSaved.name(), userUpdated.name());
     }
 
     @Test
     public void testIfUpdateCommandReturnsBadRequest() throws Exception {
-        final User userSaved = createUser();
-        final UpdateCommand command = new UpdateCommand(userSaved.getId(), null);
+        final UserResponse userSaved = createUser();
+        final UpdateCommand command = new UpdateCommand(userSaved.id(), null);
 
         final var entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.PUT, entity, String.class);
@@ -220,16 +217,16 @@ public class UserRestControllerTest {
 
     @Test
     public void testIfDisableUUIDCommandReturnsOk() throws Exception {
-        final User userSaved = createUser();
+        final UserResponse userSaved = createUser();
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/" + userSaved.getId().toString(), HttpMethod.DELETE, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/" + userSaved.id().toString(), HttpMethod.DELETE, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        final User userDisabled = mapper.readValue(responseEntity.getBody(), User.class);
+        final UserResponse userDisabled = mapper.readValue(responseEntity.getBody(), UserResponse.class);
         assertNotNull(userDisabled);
-        assertNotNull(userDisabled.getId());
-        assertEquals(userSaved.getId(), userDisabled.getId());
-        assertFalse(userDisabled.isEnabled());
+        assertNotNull(userDisabled.id());
+        assertEquals(userSaved.id(), userDisabled.id());
+        assertFalse(userDisabled.enabled());
     }
 
     @Test
@@ -262,17 +259,46 @@ public class UserRestControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
+    @Test
+    public void testIfResponseDoesNotContainInternalClassNames() throws Exception {
+        // Attempt to create user with duplicate email to trigger error handler
+        final var role = roleRepository.findAll().get(0);
+        final var command = new SaveCommand(UUID.randomUUID().toString(), "classname_test@command.com", "Test@1234", role.getId());
 
-    private User createUser() throws Exception {
+        var entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+        this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
+
+        // Second attempt — same email
+        entity = new HttpEntity<>(mapper.writeValueAsString(command), headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        // Error response should NOT contain internal class names
+        assertFalse(responseEntity.getBody().contains("com.sergiovitorino"));
+        assertFalse(responseEntity.getBody().contains("Exception"));
+    }
+
+    @Test
+    public void testIfActuatorHealthIsAccessibleWithoutAuth() {
+        var responseEntity = this.restTemplete.getForEntity("http://localhost:" + port + "/actuator/health", String.class);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void testIfActuatorEnvIsNotAccessibleWithoutAuth() {
+        var responseEntity = this.restTemplete.getForEntity("http://localhost:" + port + "/actuator/env", String.class);
+        assertNotEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    private UserResponse createUser() throws Exception {
         Role role = roleRepository.findAll().get(0);
         SaveCommand command = new SaveCommand(UUID.randomUUID().toString(), UUID.randomUUID().toString() + "@command.com", "Test@1234", role.getId());
 
         HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(command), headers);
         ResponseEntity<String> responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, entity, String.class);
-        
-        // Verificar se a resposta é bem-sucedida antes de tentar deserializar
+
         if (responseEntity.getStatusCode() == HttpStatus.CREATED) {
-            return mapper.readValue(responseEntity.getBody(), User.class);
+            return mapper.readValue(responseEntity.getBody(), UserResponse.class);
         } else {
             throw new RuntimeException("Failed to create user: " + responseEntity.getBody());
         }
