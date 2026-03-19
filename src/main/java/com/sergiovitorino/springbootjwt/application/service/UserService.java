@@ -12,14 +12,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of("name", "email", "enabled", "dateCreatedAt", "dateUpdatedAt");
+    private static final UUID SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
@@ -33,27 +37,26 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        var user = repository.findByEmail(email);
-        if (user == null) {
-            throw new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + email);
-        }
-        return user;
+        return repository.findByEmailWithAuthorities(email)
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + email));
     }
 
+    @Transactional(readOnly = true)
     public Page<User> findAll(Integer pageNumber, Integer pageSize, String orderBy, Boolean asc, User user) {
+        String safeOrderBy = ALLOWED_ORDER_FIELDS.contains(orderBy) ? orderBy : "name";
         final var direction = asc ? Sort.Direction.ASC : Sort.Direction.DESC;
-        final var sort = Sort.by(direction, orderBy);
+        final var sort = Sort.by(direction, safeOrderBy);
         final var pageable = PageRequest.of(pageNumber, pageSize, sort);
         var matcher = ExampleMatcher.matching().withIgnoreNullValues().withIgnoreCase();
         if (user.getEnabled() == null) {
             matcher = matcher.withIgnorePaths("enabled");
         }
+        matcher = matcher.withIgnorePaths("accountLocked");
         final var example = Example.of(user, matcher);
-        final var result = repository.findAll(example, pageable);
-
-        return result;
+        return repository.findAll(example, pageable);
     }
 
+    @Transactional(readOnly = true)
     public Long count(User user) {
         var matcher = ExampleMatcher.matching()
                 .withIgnoreNullValues()
@@ -61,78 +64,64 @@ public class UserService implements UserDetailsService {
         if (user.getEnabled() == null) {
             matcher = matcher.withIgnorePaths("enabled");
         }
+        matcher = matcher.withIgnorePaths("accountLocked");
         final var example = Example.of(user, matcher);
-        final var result = repository.count(example);
-
-        return result;
+        return repository.count(example);
     }
 
+    @Transactional
     public User save(User user) {
-        var old = repository.findByEmail(user.getEmail());
-        if (old != null) {
+        repository.findByEmail(user.getEmail()).ifPresent(existing -> {
             log.warn("Attempt to create user with existing email: {}", user.getEmail());
             throw new EmailAlreadyExistsException("E-mail already");
-        }
+        });
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setDateCreatedAt(LocalDateTime.now());
-        UUID creatorId;
-        try {
-            creatorId = userLogged.getUserId();
-            user.setUserIdCreatedAt(creatorId);
-        } catch (Exception e) {
-            log.warn("Could not get logged user ID for audit, using system ID: {}", e.getMessage());
-            creatorId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-            user.setUserIdCreatedAt(creatorId);
-        }
+        user.setUserIdCreatedAt(getAuditUserId());
         user.setEnabled(true);
+        user.setAccountLocked(false);
         User savedUser = repository.save(user);
-        log.info("User created: id={}, email={}, createdBy={}", savedUser.getId(), savedUser.getEmail(), creatorId);
+        log.info("User created: id={}, email={}", savedUser.getId(), savedUser.getEmail());
         return savedUser;
     }
 
+    @Transactional
     public User update(User user) {
-        var old = repository.findById(user.getId()).orElse(null);
-        if (old == null) {
+        var old = repository.findById(user.getId()).orElseThrow(() -> {
             log.warn("Attempt to update non-existent user: id={}", user.getId());
-            throw new ResourceNotFoundException("User not found");
-        }
+            return new ResourceNotFoundException("User not found");
+        });
         String oldName = old.getName();
         old.setName(user.getName());
         old.setDateUpdatedAt(LocalDateTime.now());
-        UUID updaterId;
-        try {
-            updaterId = userLogged.getUserId();
-            old.setUserIdUpdatedAt(updaterId);
-        } catch (Exception e) {
-            log.warn("Could not get logged user ID for audit, using system ID: {}", e.getMessage());
-            updaterId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-            old.setUserIdUpdatedAt(updaterId);
-        }
+        old.setUserIdUpdatedAt(getAuditUserId());
         User updatedUser = repository.save(old);
-        log.info("User updated: id={}, nameChanged='{}'->'{}', updatedBy={}", updatedUser.getId(), oldName, updatedUser.getName(), updaterId);
+        log.info("User updated: id={}, nameChanged='{}'->'{}'" , updatedUser.getId(), oldName, updatedUser.getName());
         return updatedUser;
     }
 
+    @Transactional
     public User disable(UUID id) {
-        var user = repository.findById(id).orElse(null);
-        if (user == null) {
+        var user = repository.findById(id).orElseThrow(() -> {
             log.warn("Attempt to disable non-existent user: id={}", id);
-            throw new ResourceNotFoundException("User not found");
-        }
+            return new ResourceNotFoundException("User not found");
+        });
         user.setEnabled(false);
         user.setDateDisabledAt(LocalDateTime.now());
-        UUID disablerId;
-        try {
-            disablerId = userLogged.getUserId();
-            user.setUserIdDisabledAt(disablerId);
-        } catch (Exception e) {
-            log.warn("Could not get logged user ID for audit, using system ID: {}", e.getMessage());
-            disablerId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-            user.setUserIdDisabledAt(disablerId);
-        }
+        user.setUserIdDisabledAt(getAuditUserId());
         User disabledUser = repository.save(user);
-        log.info("User disabled: id={}, email={}, disabledBy={}", disabledUser.getId(), disabledUser.getEmail(), disablerId);
+        log.info("User disabled: id={}, email={}", disabledUser.getId(), disabledUser.getEmail());
         return disabledUser;
+    }
+
+    private UUID getAuditUserId() {
+        try {
+            UUID userId = userLogged.getUserId();
+            return userId != null ? userId : SYSTEM_USER_ID;
+        } catch (Exception e) {
+            log.warn("Could not get logged user ID for audit: {}", e.getMessage());
+            return SYSTEM_USER_ID;
+        }
     }
 }

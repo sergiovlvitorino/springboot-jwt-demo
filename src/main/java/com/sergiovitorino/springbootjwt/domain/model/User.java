@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -33,7 +34,10 @@ public class User extends AbstractEntity implements UserDetails {
 
     private Boolean enabled;
 
-    @ManyToOne
+    @Column(nullable = false)
+    private Boolean accountLocked = false;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(nullable = false, name = "role_id")
     private Role role;
 
@@ -66,7 +70,7 @@ public class User extends AbstractEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !Boolean.TRUE.equals(accountLocked);
     }
 
     @Override
@@ -129,6 +133,14 @@ public class User extends AbstractEntity implements UserDetails {
         this.enabled = enabled;
     }
 
+    public Boolean getAccountLocked() {
+        return accountLocked;
+    }
+
+    public void setAccountLocked(Boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+
     public Role getRole() {
         return role;
     }
@@ -142,16 +154,12 @@ public class User extends AbstractEntity implements UserDetails {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return java.util.Objects.equals(id, user.id) &&
-               java.util.Objects.equals(name, user.name) &&
-               java.util.Objects.equals(email, user.email) &&
-               java.util.Objects.equals(enabled, user.enabled) &&
-               java.util.Objects.equals(role, user.role);
+        return Objects.equals(id, user.id);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, email, enabled, role);
+        return Objects.hash(id);
     }
 
     @Override
@@ -162,7 +170,7 @@ public class User extends AbstractEntity implements UserDetails {
                 ", email='" + email + '\'' +
                 ", password='[PROTECTED]" +
                 ", enabled=" + enabled +
-                ", role=" + role +
+                ", accountLocked=" + accountLocked +
                 "}";
     }
 }

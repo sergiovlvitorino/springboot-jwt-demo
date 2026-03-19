@@ -67,14 +67,12 @@ public class Authority {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Authority authority = (Authority) o;
-        return java.util.Objects.equals(id, authority.id) &&
-               java.util.Objects.equals(name, authority.name) &&
-               java.util.Objects.equals(roles, authority.roles);
+        return java.util.Objects.equals(id, authority.id);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, roles);
+        return java.util.Objects.hash(id);
     }
 
     @Override

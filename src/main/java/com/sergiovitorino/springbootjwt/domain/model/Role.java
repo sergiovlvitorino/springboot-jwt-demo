@@ -7,6 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -87,15 +88,12 @@ public class Role {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
-        return java.util.Objects.equals(id, role.id) &&
-               java.util.Objects.equals(name, role.name) &&
-               java.util.Objects.equals(users, role.users) &&
-               java.util.Objects.equals(authorities, role.authorities);
+        return Objects.equals(id, role.id);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, users, authorities);
+        return Objects.hash(id);
     }
 
     @Override
@@ -103,7 +101,6 @@ public class Role {
         return "Role{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", authorities=" + authorities +
                 '}';
     }
 }

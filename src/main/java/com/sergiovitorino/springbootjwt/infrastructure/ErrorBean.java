@@ -1,3 +1,3 @@
 package com.sergiovitorino.springbootjwt.infrastructure;
 
-public record ErrorBean(String className, String fieldError, String message) {}
+public record ErrorBean(String errorCode, String fieldError, String message) {}
