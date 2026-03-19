@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjwt.application.service;
 
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
+import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
@@ -41,7 +42,8 @@ class UserServiceTest {
         String email = "test@example.com";
         User user = new User();
         user.setEmail(email);
-        when(repository.findByEmail(email)).thenReturn(user);
+        user.setRole(new Role());
+        when(repository.findByEmailWithAuthorities(email)).thenReturn(Optional.of(user));
 
         UserDetails result = service.loadUserByUsername(email);
 
@@ -52,7 +54,7 @@ class UserServiceTest {
     @Test
     void loadUserByUsername_notFound() {
         String email = "notfound@example.com";
-        when(repository.findByEmail(email)).thenReturn(null);
+        when(repository.findByEmailWithAuthorities(email)).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class, () -> service.loadUserByUsername(email));
     }
@@ -63,7 +65,7 @@ class UserServiceTest {
         user.setEmail("new@example.com");
         user.setPassword("rawPassword");
 
-        when(repository.findByEmail(user.getEmail())).thenReturn(null);
+        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
         when(userLogged.getUserId()).thenReturn(UUID.randomUUID());
         when(repository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
@@ -75,6 +77,7 @@ class UserServiceTest {
         assertNotNull(savedUser.getDateCreatedAt());
         assertNotNull(savedUser.getUserIdCreatedAt());
         assertTrue(savedUser.isEnabled());
+        assertFalse(Boolean.TRUE.equals(savedUser.getAccountLocked()));
     }
 
     @Test
@@ -82,7 +85,7 @@ class UserServiceTest {
         User user = new User();
         user.setEmail("existing@example.com");
 
-        when(repository.findByEmail(user.getEmail())).thenReturn(new User());
+        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(new User()));
 
         assertThrows(EmailAlreadyExistsException.class, () -> service.save(user));
         verify(repository, never()).save(any());
@@ -149,5 +152,22 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service.disable(id));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void save_usesSystemIdWhenUserLoggedFails() {
+        User user = new User();
+        user.setEmail("system@example.com");
+        user.setPassword("rawPassword");
+
+        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
+        when(userLogged.getUserId()).thenThrow(new RuntimeException("No security context"));
+        when(repository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        User savedUser = service.save(user);
+
+        assertNotNull(savedUser.getUserIdCreatedAt());
+        assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), savedUser.getUserIdCreatedAt());
     }
 }

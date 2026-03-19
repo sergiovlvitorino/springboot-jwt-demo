@@ -2,7 +2,6 @@ package com.sergiovitorino.springbootjwt.domain.model;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,28 +20,32 @@ class RoleTest {
     }
 
     @Test
-    void equalsHashCodeAndToString_coverCommonBranches() {
+    void equalsAndHashCode_basedOnIdOnly() {
         UUID id = UUID.randomUUID();
-        List<User> users = new ArrayList<>();
-        List<Authority> authorities = new ArrayList<>(List.of(new Authority("ROLE_ADMIN")));
 
-        Role r1 = new Role(id, "ADMIN", users, authorities);
-        Role r2 = new Role(id, "ADMIN", new ArrayList<>(users), new ArrayList<>(authorities));
+        Role r1 = new Role(id, "ADMIN", null, List.of(new Authority("ROLE_ADMIN")));
+        Role r2 = new Role(id, "DIFFERENT", null, List.of());
 
-        assertEquals(r1, r1);
-        assertNotEquals(r1, null);
-        assertNotEquals(r1, "x");
-
+        // Same ID → equal
         assertEquals(r1, r2);
         assertEquals(r1.hashCode(), r2.hashCode());
 
-        Role r3 = new Role(id, "DIFFERENT", users, authorities);
+        // Different ID → not equal
+        Role r3 = new Role(UUID.randomUUID(), "ADMIN", null, List.of(new Authority("ROLE_ADMIN")));
         assertNotEquals(r1, r3);
 
-        String s = r1.toString();
+        // Identity and null checks
+        assertEquals(r1, r1);
+        assertNotEquals(r1, null);
+        assertNotEquals(r1, "x");
+    }
+
+    @Test
+    void toString_doesNotIncludeCollections() {
+        Role r = new Role(UUID.randomUUID(), "ADMIN", null, null);
+        String s = r.toString();
         assertTrue(s.contains("Role{"));
         assertTrue(s.contains("name='ADMIN'"));
+        assertFalse(s.contains("users"));
     }
 }
-
-

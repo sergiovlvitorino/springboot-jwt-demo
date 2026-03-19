@@ -33,7 +33,7 @@ A RESTful API demonstration using Spring Boot 3.5.5, Spring Security 6, and JSON
 | Database (prod) | PostgreSQL (`runtime` scope) |
 | Build | Maven 3.9+ |
 | Cloud | Spring Cloud 2024.0.1 |
-| Tests | JUnit 5, Mockito, Spring Cloud Contract — **99 tests, 0 failures** |
+| Tests | JUnit 5, Mockito, Spring Cloud Contract — **92 tests, 0 failures** |
 | Frontend | Python 3, CustomTkinter, requests |
 
 ## Getting Started
@@ -200,7 +200,7 @@ src/main/java/com/sergiovitorino/springbootjwt/
 │   ├── command/
 │   │   ├── user/                  # SaveCommand, UpdateCommand, UserResponse, CountCommand, ListCommand
 │   │   └── role/                  # CountCommand, ListCommand
-│   └── service/                   # UserService, RoleService
+│   └── service/                   # UserService (@Transactional, orderBy whitelist), RoleService
 ├── domain/
 │   ├── exception/                 # BusinessException, EmailAlreadyExistsException, ResourceNotFoundException
 │   ├── model/                     # User (@UuidGenerator), Role, Authority, AbstractEntity
@@ -238,12 +238,12 @@ frontend/                          # Python desktop client
 ## Testing
 
 ```
-99 tests — 0 failures
+92 tests — 0 failures
 ```
 
 | Category | Examples |
 |----------|---------|
-| Unit | Service, command handler, validator, domain model, rate limiter, email masking, DTO mapping |
+| Unit | Service, domain model, rate limiter, email masking, DTO mapping |
 | Integration | Repository, REST controller, security config, JWT config |
 | Contract | Spring Cloud Contract (shouldReturnUser) |
 | Security | Actuator access, error code format, no class name leak, no password in response |
@@ -310,6 +310,21 @@ The collection auto-saves `token` and `roleId` via test scripts.
 This project is licensed under the GPL-3.0 License — see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Changelog
+
+### v4 — Architecture Improvements
+
+- Fixed `equals/hashCode` on all entities — now uses only `id` (was using mutable audit fields + collections, causing broken Sets/Maps and Hibernate issues)
+- Added `findByEmailWithAuthorities` with `JOIN FETCH` — eliminates N+1 queries during login (3 queries → 1)
+- Added `@Transactional` to all service methods (read-only on queries, read-write on mutations)
+- Changed `UserRepository.findByEmail` to return `Optional<User>` — null safety enforced at compile time
+- Extracted `getAuditUserId()` helper in `UserService` — removed 3x duplicated try/catch blocks
+- Added `accountLocked` field to `User` — `isAccountNonLocked()` now functional for Spring Security account locking
+- Sanitized `orderBy` parameter with whitelist in `UserService` and `RoleService` — prevents Sort injection
+- Renamed `ErrorBean.className` → `errorCode` — semantic naming, no Java internals exposed
+- Added `serialVersionUID` to `AbstractEntity` — stable serialization across JVM versions
+- Removed `AbstractEntity.equals/hashCode` — subclasses define identity via `id`, not audit timestamps
+- Deleted 8 dead-code files: `UserCommandHandler`, `RoleCommandHandler`, `ResponseEntityBuilder`, `Validator` + their tests
+- 92 tests (7 dead-code tests removed), 0 failures
 
 ### v3 — Security Hardening
 

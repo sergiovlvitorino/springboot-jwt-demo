@@ -33,9 +33,8 @@ public class TokenAuthenticationService {
     }
 
     public void addAuthentication(HttpServletResponse res, String email) {
-        final var user = userRepository.findByEmail(email);
-        if (user == null)
-            throw new IllegalArgumentException("User not found");
+        final var user = userRepository.findByEmailWithAuthorities(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()

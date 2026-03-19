@@ -6,11 +6,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @MappedSuperclass
 public abstract class AbstractEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @NotNull
     @Column(nullable = false, updatable = false)
@@ -74,24 +75,6 @@ public abstract class AbstractEntity implements Serializable {
 
     public void setUserIdDisabledAt(UUID userIdDisabledAt) {
         this.userIdDisabledAt = userIdDisabledAt;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AbstractEntity that = (AbstractEntity) o;
-        return Objects.equals(dateCreatedAt, that.dateCreatedAt) &&
-               Objects.equals(dateUpdatedAt, that.dateUpdatedAt) &&
-               Objects.equals(dateDisabledAt, that.dateDisabledAt) &&
-               Objects.equals(userIdCreatedAt, that.userIdCreatedAt) &&
-               Objects.equals(userIdUpdatedAt, that.userIdUpdatedAt) &&
-               Objects.equals(userIdDisabledAt, that.userIdDisabledAt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(dateCreatedAt, dateUpdatedAt, dateDisabledAt, userIdCreatedAt, userIdUpdatedAt, userIdDisabledAt);
     }
 
     @Override

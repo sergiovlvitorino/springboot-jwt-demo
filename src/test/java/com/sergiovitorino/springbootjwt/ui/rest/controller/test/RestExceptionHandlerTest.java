@@ -36,7 +36,7 @@ public class RestExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("NOT_FOUND", errors.get(0).className());
+        assertEquals("NOT_FOUND", errors.get(0).errorCode());
         assertEquals("User not found", errors.get(0).message());
         // Should NOT contain internal package names
         assertFalse(responseEntity.getBody().contains("com.sergiovitorino"));
@@ -48,7 +48,7 @@ public class RestExceptionHandlerTest {
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("EMAIL_ALREADY_EXISTS", errors.get(0).className());
+        assertEquals("EMAIL_ALREADY_EXISTS", errors.get(0).errorCode());
     }
 
     @Test
@@ -57,7 +57,7 @@ public class RestExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("BUSINESS_ERROR", errors.get(0).className());
+        assertEquals("BUSINESS_ERROR", errors.get(0).errorCode());
     }
 
     @Test

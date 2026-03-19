@@ -37,18 +37,18 @@ class UserRepositoryTest {
         entityManager.persistAndFlush(user);
 
         // Act
-        User found = userRepository.findByEmail("john@example.com");
+        var found = userRepository.findByEmail("john@example.com");
 
         // Assert
-        assertNotNull(found);
-        assertEquals("John Doe", found.getName());
-        assertEquals("john@example.com", found.getEmail());
+        assertTrue(found.isPresent());
+        assertEquals("John Doe", found.get().getName());
+        assertEquals("john@example.com", found.get().getEmail());
     }
 
     @Test
-    void findByEmail_returnsNull_whenNotExists() {
-        User found = userRepository.findByEmail("nonexistent@example.com");
-        assertNull(found);
+    void findByEmail_returnsEmpty_whenNotExists() {
+        var found = userRepository.findByEmail("nonexistent@example.com");
+        assertTrue(found.isEmpty());
     }
 
     @Test
