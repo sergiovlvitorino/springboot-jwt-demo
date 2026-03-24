@@ -25,39 +25,38 @@ public class RestExceptionHandlerTest {
     public void testIfExceptionParserIsOk() throws Exception {
         var responseEntity = handler.exceptionHandler(new IllegalArgumentException("Mock Exception"));
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-        // Should NOT leak class name
         assertFalse(responseEntity.getBody().contains("IllegalArgumentException"));
         assertTrue(responseEntity.getBody().contains("InternalServerError"));
     }
 
     @Test
     public void testIfResourceNotFoundReturns404WithErrorCode() throws Exception {
-        var responseEntity = handler.handleResourceNotFound(new ResourceNotFoundException("User not found"));
+        var responseEntity = handler.handleBusinessException(new ResourceNotFoundException("User not found"));
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("NOT_FOUND", errors.get(0).errorCode());
-        assertEquals("User not found", errors.get(0).message());
-        // Should NOT contain internal package names
+        assertEquals("NOT_FOUND", errors.getFirst().errorCode());
+        assertEquals("User not found", errors.getFirst().message());
         assertFalse(responseEntity.getBody().contains("com.sergiovitorino"));
     }
 
     @Test
     public void testIfEmailAlreadyExistsReturns422WithErrorCode() throws Exception {
-        var responseEntity = handler.handleEmailAlreadyExists(new EmailAlreadyExistsException("E-mail already"));
+        var responseEntity = handler.handleBusinessException(new EmailAlreadyExistsException("E-mail already"));
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("EMAIL_ALREADY_EXISTS", errors.get(0).errorCode());
+        assertEquals("EMAIL_ALREADY_EXISTS", errors.getFirst().errorCode());
     }
 
     @Test
-    public void testIfBusinessExceptionReturns400WithErrorCode() throws Exception {
+    public void testIfBusinessExceptionDefaultReturns400() throws Exception {
+        // Direct BusinessException (not a subclass) hits the default branch
         var responseEntity = handler.handleBusinessException(new BusinessException("Invalid operation"));
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("BUSINESS_ERROR", errors.get(0).errorCode());
+        assertEquals("BUSINESS_ERROR", errors.getFirst().errorCode());
     }
 
     @Test

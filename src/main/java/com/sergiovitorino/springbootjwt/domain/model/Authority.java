@@ -65,8 +65,7 @@ public class Authority {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Authority authority = (Authority) o;
+        if (!(o instanceof Authority authority)) return false;
         return java.util.Objects.equals(id, authority.id);
     }
 
