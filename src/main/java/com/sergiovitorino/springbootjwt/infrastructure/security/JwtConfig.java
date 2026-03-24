@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
+
 
 @Configuration
 public class JwtConfig {
@@ -64,8 +64,8 @@ public class JwtConfig {
             return Arrays.stream(authoritiesClaim.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+                    .<org.springframework.security.core.GrantedAuthority>map(SimpleGrantedAuthority::new)
+                    .toList();
         });
         return converter;
     }

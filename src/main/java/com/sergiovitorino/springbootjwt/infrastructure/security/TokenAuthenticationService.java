@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TokenAuthenticationService {
@@ -51,8 +50,6 @@ public class TokenAuthenticationService {
     }
 
     private String extractAuthorities(final List<Authority> authorities) {
-        return authorities.stream()
-                .map(Authority::getName)
-                .collect(Collectors.joining(","));
+        return String.join(",", authorities.stream().map(Authority::getName).toList());
     }
 }

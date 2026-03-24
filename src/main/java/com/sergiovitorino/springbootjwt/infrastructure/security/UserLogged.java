@@ -5,6 +5,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -12,16 +13,18 @@ import java.util.UUID;
 public class UserLogged {
 
     public UUID getUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            try {
-                return UUID.fromString(authentication.getName());
-            } catch (IllegalArgumentException e) {
-                // Logar erro ou retornar nulo/padrão se o principal não for um UUID válido
-                return null;
-            }
-        }
-        return null;
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getName)
+                .flatMap(this::parseUuid)
+                .orElse(null);
     }
 
+    private Optional<UUID> parseUuid(String value) {
+        try {
+            return Optional.of(UUID.fromString(value));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
 }

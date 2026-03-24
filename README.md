@@ -267,6 +267,17 @@ mvn clean package -DskipTests  # Skip tests
 - Custom `ConstraintValidator` for domain validation
 - JaCoCo for coverage reporting
 
+### Java 21 Features
+
+| Feature | Where |
+|---------|-------|
+| `instanceof` pattern matching | `equals()` in User, Role, Authority |
+| Sealed classes | `BusinessException sealed permits ResourceNotFoundException, EmailAlreadyExistsException` |
+| Switch pattern matching | `RestExceptionHandler` — single handler dispatches by sealed subtype |
+| `List.of()` / `.toList()` | Config, JwtConfig, RestExceptionHandler, TokenAuthenticationService |
+| `List.getFirst()` | Sequenced Collections API in tests |
+| Optional chain | `UserLogged` — `Optional.ofNullable().filter().map().flatMap().orElse()` |
+
 ## Troubleshooting
 
 ### H2 Console Access (dev profile only)
@@ -310,6 +321,19 @@ The collection auto-saves `token` and `roleId` via test scripts.
 This project is licensed under the GPL-3.0 License — see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Changelog
+
+### v5 — Java 21 Modernization
+
+- `instanceof` pattern matching in `equals()` — User, Role, Authority
+- Sealed exception hierarchy: `BusinessException sealed permits ResourceNotFoundException, EmailAlreadyExistsException`
+- Switch pattern matching in `RestExceptionHandler` — 3 `@ExceptionHandler` methods merged into 1 with `switch (exception) { case ... }`
+- `Arrays.asList()` → `List.of()` in Config.java (immutable, no null elements)
+- `Collectors.toList()` → `.toList()` in JwtConfig, RestExceptionHandler
+- `Collectors.joining()` → `String.join()` in TokenAuthenticationService
+- Optional chain in `UserLogged` — replaced if/null/try-catch with `Optional.ofNullable().filter().map().flatMap().orElse()`
+- `List.get(0)` → `List.getFirst()` (Sequenced Collections API) in tests
+- Removed unused `Collectors` imports
+- 92 tests, 0 failures
 
 ### v4 — Architecture Improvements
 
