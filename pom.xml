@@ -118,8 +118,7 @@
                     <includes>
                         <include>**/*Test*.java</include>
                     </includes>
-                    <!-- Preserve JaCoCo's argLine (javaagent) while still enabling preview features -->
-                    <argLine>@{argLine} --enable-preview</argLine>
+                    <argLine>@{argLine}</argLine>
                 </configuration>
             </plugin>
             <plugin>

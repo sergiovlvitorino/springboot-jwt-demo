@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -19,6 +20,8 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Configuration
@@ -61,11 +64,12 @@ public class JwtConfig {
             if (authoritiesClaim == null || authoritiesClaim.isBlank()) {
                 return Collections.emptyList();
             }
-            return Arrays.stream(authoritiesClaim.split(","))
+            List<GrantedAuthority> result = Arrays.stream(authoritiesClaim.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
-                    .<org.springframework.security.core.GrantedAuthority>map(SimpleGrantedAuthority::new)
-                    .toList();
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+            return result;
         });
         return converter;
     }
