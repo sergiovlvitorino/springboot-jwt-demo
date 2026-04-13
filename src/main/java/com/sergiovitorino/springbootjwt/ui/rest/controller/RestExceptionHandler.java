@@ -1,5 +1,6 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
+import java.util.Collections;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.exception.BusinessException;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
