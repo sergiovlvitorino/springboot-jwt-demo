@@ -94,7 +94,6 @@ public class UserService implements UserDetailsService {
         });
         String oldName = old.getName();
         old.setName(user.getName());
-        old.setDateUpdatedAt(LocalDateTime.now());
         old.setUserIdUpdatedAt(getAuditUserId());
         User updatedUser = repository.save(old);
         log.info("User updated: id={}, nameChanged='{}'->'{}'" , updatedUser.getId(), oldName, updatedUser.getName());
