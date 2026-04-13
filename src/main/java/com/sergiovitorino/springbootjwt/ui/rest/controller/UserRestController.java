@@ -100,7 +100,7 @@ public class UserRestController {
             @ApiResponse(responseCode = "200", description = "User disabled successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_DELETE + "')")
     @DeleteMapping("/{id}")
     public ResponseEntity<UserResponse> delete(@PathVariable UUID id) {
         log.debug("DELETE /rest/user/{} - Disabling user", id);

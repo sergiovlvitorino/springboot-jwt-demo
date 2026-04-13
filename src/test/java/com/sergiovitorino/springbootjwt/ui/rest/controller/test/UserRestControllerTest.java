@@ -244,6 +244,38 @@ public class UserRestControllerTest {
     }
 
     @Test
+    public void testIfDeleteIsForbiddenWithoutUserDeleteAuthority() throws Exception {
+        // Cria um usuário com role GUEST (não tem USER_DELETE, só USER_RETRIEVE e ROLE_RETRIEVE)
+        final var guestRole = roleRepository.findAll().stream()
+                .filter(r -> r.getName().equals("GUEST"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Role GUEST not found"));
+        final var guestEmail = "guest_nodelete_" + UUID.randomUUID() + "@test.com";
+        final var guestPassword = "Test@1234";
+        final var saveCommand = new SaveCommand(UUID.randomUUID().toString(), guestEmail, guestPassword, guestRole.getId());
+
+        // Admin cria o usuário GUEST
+        final var createEntity = new HttpEntity<>(mapper.writeValueAsString(saveCommand), headers);
+        final var createResponse = restTemplete.exchange("http://localhost:" + port + "/rest/user", HttpMethod.POST, createEntity, String.class);
+        assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
+        final var guestUser = mapper.readValue(createResponse.getBody(), UserResponse.class);
+
+        // Autentica como GUEST (tem USER_SAVE via ADMIN? Não — GUEST só tem USER_RETRIEVE e ROLE_RETRIEVE)
+        final var guestHeaders = new LoginHelper().createAuthenticatedHeader(restTemplete, port, guestEmail, guestPassword, "application/json");
+
+        // Tenta deletar outro usuário — deve retornar 403 pois GUEST não tem USER_DELETE
+        final var adminUser = createUser();
+        final var deleteEntity = new HttpEntity<String>(null, guestHeaders);
+        final var deleteResponse = restTemplete.exchange("http://localhost:" + port + "/rest/user/" + adminUser.id(), HttpMethod.DELETE, deleteEntity, String.class);
+        assertEquals(HttpStatus.FORBIDDEN, deleteResponse.getStatusCode());
+
+        // Confirma que o GUEST também não pode deletar a si mesmo
+        final var selfDeleteEntity = new HttpEntity<String>(null, guestHeaders);
+        final var selfDeleteResponse = restTemplete.exchange("http://localhost:" + port + "/rest/user/" + guestUser.id(), HttpMethod.DELETE, selfDeleteEntity, String.class);
+        assertEquals(HttpStatus.FORBIDDEN, selfDeleteResponse.getStatusCode());
+    }
+
+    @Test
     public void testIfCountCommandReturnsOk() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
         final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user/count?user.enabled=true", HttpMethod.GET, entity, String.class);
