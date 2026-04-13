@@ -1,7 +1,7 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjwt.domain.model.Role;
+import com.sergiovitorino.springbootjwt.application.command.role.RoleResponse;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.util.LoginHelper;
 import org.json.JSONObject;
@@ -49,7 +49,7 @@ public class RoleRestControllerTest {
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }
@@ -70,7 +70,7 @@ public class RoleRestControllerTest {
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }
@@ -84,7 +84,7 @@ public class RoleRestControllerTest {
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }
