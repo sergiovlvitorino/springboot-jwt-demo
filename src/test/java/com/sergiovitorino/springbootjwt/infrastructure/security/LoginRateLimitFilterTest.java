@@ -79,7 +79,8 @@ class LoginRateLimitFilterTest {
     }
 
     @Test
-    void shouldUseRemoteAddrNotXForwardedFor() throws Exception {
+    void shouldUseXForwardedForWhenPresent() throws Exception {
+        // Comportamento atualizado: atrás de proxy, deve usar o IP do header XFF
         var request = createLoginRequest("192.168.1.100");
         request.addHeader("X-Forwarded-For", "1.2.3.4");
         var response = new MockHttpServletResponse();
@@ -87,9 +88,72 @@ class LoginRateLimitFilterTest {
 
         filter.doFilterInternal(request, response, chain);
 
-        // Rate limit tracking should use remoteAddr, not X-Forwarded-For
-        assertTrue(filter.getAttempts().containsKey("192.168.1.100"));
-        assertFalse(filter.getAttempts().containsKey("1.2.3.4"));
+        // Rate limiting deve usar o IP do X-Forwarded-For, não o remoteAddr do proxy
+        assertTrue(filter.getAttempts().containsKey("1.2.3.4"));
+        assertFalse(filter.getAttempts().containsKey("192.168.1.100"));
+    }
+
+    @Test
+    void extractClientIp_shouldReturnFirstIpFromXForwardedForChain() {
+        // Quando XFF tem cadeia de proxies, deve usar o primeiro (IP real do cliente)
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("10.0.0.1");
+        request.addHeader("X-Forwarded-For", "1.2.3.4, 10.0.0.1, 172.16.0.1");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("1.2.3.4", clientIp);
+    }
+
+    @Test
+    void extractClientIp_shouldFallbackToRemoteAddrWhenXffAbsent() {
+        // Sem header XFF, deve usar remoteAddr normalmente
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("203.0.113.5");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("203.0.113.5", clientIp);
+    }
+
+    @Test
+    void extractClientIp_shouldFallbackToRemoteAddrWhenXffIsBlank() {
+        // Header XFF presente mas vazio deve ser ignorado
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("203.0.113.5");
+        request.addHeader("X-Forwarded-For", "   ");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("203.0.113.5", clientIp);
+    }
+
+    @Test
+    void shouldRateLimitBasedOnXForwardedForIp() throws Exception {
+        // Rate limiting deve ser aplicado corretamente ao IP extraído do XFF
+        String realClientIp = "5.5.5.5";
+        String proxyIp = "10.10.10.10";
+
+        // Esgota as tentativas usando o IP real do XFF
+        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+            filter.isRateLimited(realClientIp);
+        }
+
+        // Próximo request do mesmo cliente (via proxy) deve ser bloqueado
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr(proxyIp);
+        request.addHeader("X-Forwarded-For", realClientIp);
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+
+        filter.doFilterInternal(request, response, chain);
+
+        assertEquals(429, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Too many login attempts"));
     }
 
     @Test

@@ -29,7 +29,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         if ("POST".equalsIgnoreCase(request.getMethod()) && "/login".equals(request.getServletPath())) {
-            String ip = request.getRemoteAddr();
+            String ip = extractClientIp(request);
             if (isRateLimited(ip)) {
                 response.setStatus(429);
                 response.setContentType("application/json");
@@ -38,6 +38,17 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    String extractClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            String firstIp = xff.split(",")[0].trim();
+            if (!firstIp.isEmpty()) {
+                return firstIp;
+            }
+        }
+        return request.getRemoteAddr();
     }
 
     boolean isRateLimited(String ip) {
