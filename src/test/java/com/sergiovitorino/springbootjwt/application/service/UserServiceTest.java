@@ -110,7 +110,8 @@ class UserServiceTest {
 
         assertNotNull(updatedUser);
         assertEquals("New Name", updatedUser.getName());
-        assertNotNull(updatedUser.getDateUpdatedAt());
+        // dateUpdatedAt é preenchido automaticamente pelo @PreUpdate do JPA (AbstractEntity.onPreUpdate),
+        // e não pelo service. Em contexto de mock sem JPA real, o valor permanece null aqui.
         assertNotNull(updatedUser.getUserIdUpdatedAt());
     }
 
