@@ -55,8 +55,11 @@ public class Initialize implements CommandLineRunner {
             log.debug("Created GUEST role with authorities: {}, {}", AuthorityConstants.USER_RETRIEVE, AuthorityConstants.ROLE_RETRIEVE);
 
             authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_SAVE));
+            authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_DELETE));
             Role adminRole = roleRepository.saveAndFlush(new Role("ADMIN", authorityRepository.findAll()));
-            log.debug("Created ADMIN role with all authorities");
+            log.debug("Created ADMIN role with all authorities: {}, {}, {}, {}",
+                AuthorityConstants.USER_RETRIEVE, AuthorityConstants.ROLE_RETRIEVE,
+                AuthorityConstants.USER_SAVE, AuthorityConstants.USER_DELETE);
 
             User user = new User();
             user.setName("Lorem Ipsum");
