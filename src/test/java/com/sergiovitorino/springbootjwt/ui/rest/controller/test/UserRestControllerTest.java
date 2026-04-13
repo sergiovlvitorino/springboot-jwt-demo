@@ -47,7 +47,7 @@ public class UserRestControllerTest {
     @Test
     public void testIfListCommandReturnsBadRequestWhenPageNumberIsMinusOne() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=-1&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=-1&pageSize=10&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
@@ -67,7 +67,17 @@ public class UserRestControllerTest {
     @Test
     public void testIfListCommandReturnsBadRequestWhenOrderByIsEmpty() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10000&orderBy=&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10&orderBy=&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
+        assertNotNull(errors);
+        assertFalse(errors.isEmpty());
+    }
+
+    @Test
+    public void testIfListCommandReturnsBadRequestWhenPageSizeExceedsMax() throws Exception {
+        final var entity = new HttpEntity<String>(null, headers);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=101&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
@@ -77,7 +87,7 @@ public class UserRestControllerTest {
     @Test
     public void testIfListCommandReturnsBadRequestWhenAscIsInvalid() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10000&orderBy=name&asc=aaa&user.enabled=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=1&pageSize=10&orderBy=name&asc=aaa&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
         final List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertNotNull(errors);
@@ -88,7 +98,7 @@ public class UserRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=100&orderBy=name&asc=true&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         final JSONObject jsonObject = new JSONObject(responseEntity.getBody());
@@ -102,7 +112,7 @@ public class UserRestControllerTest {
     public void testIfListCommandReturnsOk2() throws Exception {
         createUser();
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=false&user.enabled=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=100&orderBy=name&asc=false&user.enabled=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         final var jsonObject = new JSONObject(responseEntity.getBody());
@@ -114,7 +124,7 @@ public class UserRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk3() throws Exception {
         final var entity = new HttpEntity<String>(null, headers);
-        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
+        final var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/user?pageNumber=0&pageSize=100&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         final JSONObject jsonObject = new JSONObject(responseEntity.getBody());

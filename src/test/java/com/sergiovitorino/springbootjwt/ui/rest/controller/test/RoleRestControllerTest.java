@@ -43,7 +43,7 @@ public class RoleRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
@@ -62,9 +62,16 @@ public class RoleRestControllerTest {
     }
 
     @Test
+    public void testIfListCommandReturnsBadRequestWhenPageSizeExceedsMax() throws Exception {
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=101&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void testIfListCommandReturnsOk2() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
@@ -78,7 +85,7 @@ public class RoleRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk3() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
