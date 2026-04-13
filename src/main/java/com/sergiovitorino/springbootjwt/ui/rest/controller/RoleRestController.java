@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.sergiovitorino.springbootjwt.application.command.role.CountCommand;
 import com.sergiovitorino.springbootjwt.application.command.role.ListCommand;
+import com.sergiovitorino.springbootjwt.application.command.role.RoleResponse;
 import com.sergiovitorino.springbootjwt.application.service.RoleService;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
@@ -25,8 +26,9 @@ public class RoleRestController {
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
     @GetMapping
-    public ResponseEntity<Page<Role>> get(@Valid ListCommand command) {
-        return ResponseEntity.ok(roleService.findAll(command.pageNumber(), command.pageSize(), command.orderBy(), command.asc(), command.role() == null ? new Role() : command.role()));
+    public ResponseEntity<Page<RoleResponse>> get(@Valid ListCommand command) {
+        return ResponseEntity.ok(roleService.findAll(command.pageNumber(), command.pageSize(), command.orderBy(), command.asc(), command.role() == null ? new Role() : command.role())
+                .map(RoleResponse::from));
     }
 
     @PreAuthorize("hasAuthority('" + AuthorityConstants.ROLE_RETRIEVE + "')")
