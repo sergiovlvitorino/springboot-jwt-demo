@@ -21,6 +21,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>21</java.version>
         <spring-cloud.version>2024.0.1</spring-cloud.version>
+        <dependency-check-maven.version>12.1.1</dependency-check-maven.version>
     </properties>
 
     <dependencyManagement>
@@ -167,6 +168,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <baseClassForTests>com.sergiovitorino.springbootjwt.contract.BaseContractTest</baseClassForTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check-maven.version}</version>
+                <configuration>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <suppressionFiles>
+                        <suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
+                    </suppressionFiles>
+                    <formats>
+                        <format>HTML</format>
+                    </formats>
+                    <outputDirectory>${project.build.directory}/dependency-check-report</outputDirectory>
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
                 </configuration>
             </plugin>
         </plugins>
