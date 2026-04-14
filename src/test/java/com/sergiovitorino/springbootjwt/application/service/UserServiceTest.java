@@ -85,7 +85,7 @@ class UserServiceTest {
         assertEquals(role, savedUser.getRole());
         assertNotNull(savedUser.getDateCreatedAt());
         assertNotNull(savedUser.getUserIdCreatedAt());
-        assertTrue(savedUser.isEnabled());
+        assertTrue(Boolean.TRUE.equals(savedUser.getEnabled()));
         assertFalse(Boolean.TRUE.equals(savedUser.getAccountLocked()));
     }
 
@@ -150,7 +150,7 @@ class UserServiceTest {
         User disabledUser = service.disable(id);
 
         assertNotNull(disabledUser);
-        assertFalse(disabledUser.isEnabled());
+        assertFalse(Boolean.TRUE.equals(disabledUser.getEnabled()));
         assertNotNull(disabledUser.getDateDisabledAt());
         assertNotNull(disabledUser.getUserIdDisabledAt());
     }

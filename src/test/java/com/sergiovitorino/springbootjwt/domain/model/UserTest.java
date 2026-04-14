@@ -1,9 +1,7 @@
 package com.sergiovitorino.springbootjwt.domain.model;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.GrantedAuthority;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -11,53 +9,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserTest {
 
     @Test
-    void getAuthorities_returnsGuestWhenRoleNull() {
+    void getEnabled_defaultsToNullWhenNotSet() {
         User user = new User();
-        user.setRole(null);
-
-        List<String> names = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        assertEquals(List.of("ROLE_GUEST"), names);
+        assertNull(user.getEnabled());
     }
 
     @Test
-    void getAuthorities_returnsGuestWhenRoleHasNoAuthorities() {
+    void getEnabled_trueWhenSet() {
         User user = new User();
-        user.setRole(new Role());
-
-        List<String> names = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        assertEquals(List.of("ROLE_GUEST"), names);
+        user.setEnabled(true);
+        assertTrue(user.getEnabled());
     }
 
     @Test
-    void getAuthorities_returnsAuthoritiesFromRole() {
-        Role role = new Role();
-        role.setAuthorities(List.of(new Authority("ROLE_ADMIN"), new Authority("ROLE_USER")));
-
+    void getAccountLocked_defaultsToFalse() {
         User user = new User();
-        user.setRole(role);
-
-        List<String> names = user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        assertEquals(List.of("ROLE_ADMIN", "ROLE_USER"), names);
+        assertFalse(Boolean.TRUE.equals(user.getAccountLocked()));
     }
 
     @Test
-    void isEnabled_defaultsToFalseWhenNull() {
-        User user = new User();
-        assertFalse(user.isEnabled());
-        assertFalse(user.isEnabled());
-    }
-
-    @Test
-    void isAccountNonLocked_defaultsToTrue() {
-        User user = new User();
-        assertTrue(user.isAccountNonLocked());
-    }
-
-    @Test
-    void isAccountNonLocked_falseWhenLocked() {
+    void getAccountLocked_trueWhenSet() {
         User user = new User();
         user.setAccountLocked(true);
-        assertFalse(user.isAccountNonLocked());
+        assertTrue(user.getAccountLocked());
     }
 
     @Test

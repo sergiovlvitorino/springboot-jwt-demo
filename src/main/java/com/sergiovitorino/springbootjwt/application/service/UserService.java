@@ -6,6 +6,7 @@ import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundExcepti
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.security.UserDetailsAdapter;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,9 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        return repository.findByEmailWithAuthorities(email)
+        User user = repository.findByEmailWithAuthorities(email)
                 .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + email));
+        return new UserDetailsAdapter(user);
     }
 
     @Transactional(readOnly = true)
