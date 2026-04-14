@@ -1,9 +1,11 @@
 package com.sergiovitorino.springbootjwt.application.service;
 
+import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,9 @@ class UserServiceTest {
 
     @Mock
     private UserRepository repository;
+
+    @Mock
+    private RoleRepository roleRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -61,19 +66,23 @@ class UserServiceTest {
 
     @Test
     void save_success() {
-        User user = new User();
-        user.setEmail("new@example.com");
-        user.setPassword("rawPassword");
+        UUID roleId = UUID.randomUUID();
+        SaveCommand command = new SaveCommand("John Doe", "new@example.com", "rawPassword", roleId);
+        Role role = new Role();
 
-        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+        when(repository.findByEmail(command.email())).thenReturn(Optional.empty());
+        when(roleRepository.findById(roleId)).thenReturn(Optional.of(role));
         when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
         when(userLogged.getUserId()).thenReturn(UUID.randomUUID());
         when(repository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        User savedUser = service.save(user);
+        User savedUser = service.save(command);
 
         assertNotNull(savedUser);
         assertEquals("encodedPassword", savedUser.getPassword());
+        assertEquals("John Doe", savedUser.getName());
+        assertEquals("new@example.com", savedUser.getEmail());
+        assertEquals(role, savedUser.getRole());
         assertNotNull(savedUser.getDateCreatedAt());
         assertNotNull(savedUser.getUserIdCreatedAt());
         assertTrue(savedUser.isEnabled());
@@ -82,12 +91,12 @@ class UserServiceTest {
 
     @Test
     void save_emailAlreadyExists() {
-        User user = new User();
-        user.setEmail("existing@example.com");
+        UUID roleId = UUID.randomUUID();
+        SaveCommand command = new SaveCommand("Jane Doe", "existing@example.com", "rawPassword", roleId);
 
-        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.of(new User()));
+        when(repository.findByEmail(command.email())).thenReturn(Optional.of(new User()));
 
-        assertThrows(EmailAlreadyExistsException.class, () -> service.save(user));
+        assertThrows(EmailAlreadyExistsException.class, () -> service.save(command));
         verify(repository, never()).save(any());
     }
 
@@ -155,17 +164,30 @@ class UserServiceTest {
     }
 
     @Test
-    void save_usesSystemIdWhenUserLoggedFails() {
-        User user = new User();
-        user.setEmail("system@example.com");
-        user.setPassword("rawPassword");
+    void save_roleNotFound() {
+        UUID roleId = UUID.randomUUID();
+        SaveCommand command = new SaveCommand("Bob", "bob@example.com", "rawPassword", roleId);
 
-        when(repository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+        when(repository.findByEmail(command.email())).thenReturn(Optional.empty());
+        when(roleRepository.findById(roleId)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.save(command));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void save_usesSystemIdWhenUserLoggedFails() {
+        UUID roleId = UUID.randomUUID();
+        SaveCommand command = new SaveCommand("System User", "system@example.com", "rawPassword", roleId);
+        Role role = new Role();
+
+        when(repository.findByEmail(command.email())).thenReturn(Optional.empty());
+        when(roleRepository.findById(roleId)).thenReturn(Optional.of(role));
         when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
         when(userLogged.getUserId()).thenThrow(new RuntimeException("No security context"));
         when(repository.save(any(User.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        User savedUser = service.save(user);
+        User savedUser = service.save(command);
 
         assertNotNull(savedUser.getUserIdCreatedAt());
         assertEquals(UUID.fromString("00000000-0000-0000-0000-000000000001"), savedUser.getUserIdCreatedAt());
