@@ -1,8 +1,10 @@
 package com.sergiovitorino.springbootjwt.application.service;
 
+import com.sergiovitorino.springbootjwt.application.command.user.SaveCommand;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 import org.slf4j.Logger;
@@ -26,11 +28,13 @@ public class UserService implements UserDetailsService {
     private static final UUID SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final UserRepository repository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserLogged userLogged;
 
-    public UserService(UserRepository repository, PasswordEncoder passwordEncoder, UserLogged userLogged) {
+    public UserService(UserRepository repository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, UserLogged userLogged) {
         this.repository = repository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.userLogged = userLogged;
     }
@@ -70,17 +74,27 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public User save(User user) {
-        repository.findByEmail(user.getEmail()).ifPresent(existing -> {
-            log.warn("Attempt to create user with existing email: {}", user.getEmail());
+    public User save(SaveCommand command) {
+        repository.findByEmail(command.email()).ifPresent(existing -> {
+            log.warn("Attempt to create user with existing email: {}", command.email());
             throw new EmailAlreadyExistsException("E-mail already");
         });
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        var role = roleRepository.findById(command.roleId()).orElseThrow(() -> {
+            log.warn("Role not found: {}", command.roleId());
+            return new ResourceNotFoundException("Role not found");
+        });
+
+        var user = new User();
+        user.setName(command.name());
+        user.setEmail(command.email());
+        user.setPassword(passwordEncoder.encode(command.password()));
+        user.setRole(role);
         user.setDateCreatedAt(LocalDateTime.now());
         user.setUserIdCreatedAt(getAuditUserId());
         user.setEnabled(true);
         user.setAccountLocked(false);
+
         User savedUser = repository.save(user);
         log.info("User created: id={}, email={}", savedUser.getId(), savedUser.getEmail());
         return savedUser;
