@@ -42,7 +42,7 @@ public class TokenAuthenticationService {
                 .issuedAt(now)
                 .expiresAt(now.plusMillis(expirationTime))
                 .claim("authorities", extractAuthorities(user.getRole().getAuthorities()))
-                .claim("Username", user.getUsername())
+                .claim("Username", user.getEmail())
                 .build();
 
         var header = JwsHeader.with(MacAlgorithm.HS256).build();
