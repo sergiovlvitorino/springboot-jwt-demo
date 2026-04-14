@@ -1,5 +1,6 @@
 package com.sergiovitorino.springbootjwt.infrastructure.security;
 
+import com.sergiovitorino.springbootjwt.application.service.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,19 +24,23 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 public class WebSecurityConfig {
 
     private final TokenAuthenticationService tokenAuthenticationService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${springdoc.api-docs.enabled:true}")
     private boolean apiDocsEnabled;
 
-    public WebSecurityConfig(TokenAuthenticationService tokenAuthenticationService) {
+    public WebSecurityConfig(TokenAuthenticationService tokenAuthenticationService,
+                             RefreshTokenService refreshTokenService) {
         this.tokenAuthenticationService = tokenAuthenticationService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            AuthenticationManager authenticationManager,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
-        var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager, tokenAuthenticationService);
+        var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager,
+                tokenAuthenticationService, refreshTokenService);
 
         http.cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
@@ -47,6 +52,7 @@ public class WebSecurityConfig {
             )
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.POST, "/login").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll();
                 if (apiDocsEnabled) {
                     auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();

@@ -1,6 +1,8 @@
 package com.sergiovitorino.springbootjwt.infrastructure.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sergiovitorino.springbootjwt.application.service.RefreshTokenService;
+import com.sergiovitorino.springbootjwt.domain.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,17 +18,23 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Map;
 
 public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JWTLoginFilter.class);
 
-    private TokenAuthenticationService tokenAuthenticationService;
+    private final TokenAuthenticationService tokenAuthenticationService;
+    private final RefreshTokenService refreshTokenService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JWTLoginFilter(String url, AuthenticationManager authManager, TokenAuthenticationService tokenAuthenticationService) {
+    public JWTLoginFilter(String url, AuthenticationManager authManager,
+                          TokenAuthenticationService tokenAuthenticationService,
+                          RefreshTokenService refreshTokenService) {
         super(new AntPathRequestMatcher(url));
         setAuthenticationManager(authManager);
         this.tokenAuthenticationService = tokenAuthenticationService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
@@ -46,10 +54,29 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) {
+    protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res,
+                                            FilterChain chain, Authentication auth) throws IOException, ServletException {
         String clientIp = req.getRemoteAddr();
         log.info("Login successful for user: {} from IP: {}", maskEmail(auth.getName()), clientIp);
+
         tokenAuthenticationService.addAuthentication(res, auth.getName());
+
+        String accessToken = res.getHeader(TokenAuthenticationService.HEADER_STRING);
+        if (accessToken != null && accessToken.startsWith(TokenAuthenticationService.TOKEN_PREFIX + " ")) {
+            accessToken = accessToken.substring(TokenAuthenticationService.TOKEN_PREFIX.length() + 1);
+        }
+
+        String refreshTokenValue = null;
+        if (auth.getPrincipal() instanceof User user) {
+            refreshTokenValue = refreshTokenService.createRefreshToken(user.getId());
+        }
+
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+        Map<String, String> body = new java.util.LinkedHashMap<>();
+        body.put("accessToken", accessToken);
+        body.put("refreshToken", refreshTokenValue);
+        objectMapper.writeValue(res.getWriter(), body);
     }
 
     static String maskEmail(String email) {

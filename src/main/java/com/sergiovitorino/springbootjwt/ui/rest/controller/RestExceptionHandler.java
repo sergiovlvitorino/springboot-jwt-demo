@@ -3,6 +3,7 @@ package com.sergiovitorino.springbootjwt.ui.rest.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.exception.BusinessException;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
+import com.sergiovitorino.springbootjwt.domain.exception.InvalidRefreshTokenException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
 import org.slf4j.Logger;
@@ -28,6 +29,11 @@ public class RestExceptionHandler {
 
     public RestExceptionHandler(ObjectMapper mapper) {
         this.mapper = mapper;
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<String> handleInvalidRefreshToken(InvalidRefreshTokenException exception) throws Exception {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", exception);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

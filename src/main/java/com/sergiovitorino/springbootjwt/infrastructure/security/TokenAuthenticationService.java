@@ -36,18 +36,24 @@ public class TokenAuthenticationService {
         final var user = userRepository.findByEmailWithAuthorities(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        String authorities = extractAuthorities(user.getRole().getAuthorities());
+        String jwt = generateAccessToken(user.getId().toString(), user.getUsername(), authorities);
+        res.addHeader(HEADER_STRING, TOKEN_PREFIX + " " + jwt);
+    }
+
+    public String generateAccessToken(String subject, String username, String authorities) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(user.getId().toString())
+                .subject(subject)
                 .issuedAt(now)
                 .expiresAt(now.plusMillis(expirationTime))
-                .claim("authorities", extractAuthorities(user.getRole().getAuthorities()))
-                .claim("Username", user.getUsername())
+                .claim("authorities", authorities)
+                .claim("Username", username)
+                .claim("token_type", "access")
                 .build();
 
         var header = JwsHeader.with(MacAlgorithm.HS256).build();
-        String jwt = jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
-        res.addHeader(HEADER_STRING, TOKEN_PREFIX + " " + jwt);
+        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     }
 
     private String extractAuthorities(final List<Authority> authorities) {
