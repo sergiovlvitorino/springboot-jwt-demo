@@ -1,11 +1,15 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
+import com.sergiovitorino.springbootjwt.domain.model.User;
+import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
+import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.UUID;
 
@@ -18,6 +22,12 @@ public class LoginTest {
     private TestRestTemplate restTemplate;
     @LocalServerPort
     private Integer port;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Test
     public void testIfHttpStatusIsForbiddenWhenLoginIsWrong() {
@@ -54,6 +64,47 @@ public class LoginTest {
         ResponseEntity<String> responseEntity = restTemplate.exchange("http://localhost:" + port + "/rest/user", HttpMethod.GET, entity, String.class);
         var statusCode = responseEntity.getStatusCode();
         assertEquals(HttpStatus.UNAUTHORIZED.value(), statusCode.value());
+    }
+
+    /**
+     * T16 — Conta bloqueada não deve conseguir autenticar.
+     *
+     * Cria um usuário com accountLocked=true diretamente via repository (sem passar
+     * pelo UserService, que sempre força accountLocked=false) e valida que a tentativa
+     * de login retorna 401 Unauthorized, pois Spring Security lança LockedException
+     * quando isAccountNonLocked() retorna false.
+     */
+    @Test
+    public void testIfLoginReturns401WhenAccountIsLocked() {
+        // Arrange — cria usuário com conta bloqueada diretamente via repository
+        var role = roleRepository.findAll().get(0);
+        var rawPassword = "Test@1234";
+        var lockedEmail = "locked-" + UUID.randomUUID() + "@test.com";
+
+        var lockedUser = new User();
+        lockedUser.setName("Locked User");
+        lockedUser.setEmail(lockedEmail);
+        lockedUser.setPassword(passwordEncoder.encode(rawPassword));
+        lockedUser.setEnabled(true);
+        lockedUser.setAccountLocked(true);
+        lockedUser.setRole(role);
+        userRepository.saveAndFlush(lockedUser);
+
+        var credentials = "{\"username\":\"" + lockedEmail + "\",\"password\":\"" + rawPassword + "\"}";
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        var entity = new HttpEntity<>(credentials, headers);
+
+        // Act
+        var responseEntity = restTemplate.exchange(
+                "http://localhost:" + port + "/login",
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        // Assert — conta bloqueada deve resultar em 401 Unauthorized
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), responseEntity.getStatusCode().value());
     }
 
 }
