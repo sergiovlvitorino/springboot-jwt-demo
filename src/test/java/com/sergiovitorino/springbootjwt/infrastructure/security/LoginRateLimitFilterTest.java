@@ -10,11 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LoginRateLimitFilterTest {
 
+    private static final int TEST_MAX_ATTEMPTS = 10;
     private LoginRateLimitFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new LoginRateLimitFilter();
+        filter = new LoginRateLimitFilter(TEST_MAX_ATTEMPTS);
     }
 
     @Test
@@ -32,7 +33,7 @@ class LoginRateLimitFilterTest {
     void shouldBlockRequestsAboveLimit() throws Exception {
         String ip = "10.0.0.1";
 
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             assertFalse(filter.isRateLimited(ip), "Request " + i + " should not be rate limited");
         }
 
@@ -43,7 +44,7 @@ class LoginRateLimitFilterTest {
     void shouldReturn429WhenRateLimited() throws Exception {
         String ip = "10.0.0.2";
 
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             filter.isRateLimited(ip);
         }
 
@@ -71,7 +72,7 @@ class LoginRateLimitFilterTest {
 
     @Test
     void shouldTrackDifferentIpsSeparately() {
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             filter.isRateLimited("ip1");
         }
         assertTrue(filter.isRateLimited("ip1"));
@@ -138,7 +139,7 @@ class LoginRateLimitFilterTest {
         String proxyIp = "10.10.10.10";
 
         // Esgota as tentativas usando o IP real do XFF
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             filter.isRateLimited(realClientIp);
         }
 

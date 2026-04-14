@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -23,11 +24,7 @@ public class LoginTest {
     @LocalServerPort
     private Integer port;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private ApplicationContext applicationContext;
 
     @Test
     public void testIfHttpStatusIsForbiddenWhenLoginIsWrong() {
@@ -77,6 +74,11 @@ public class LoginTest {
     @Test
     public void testIfLoginReturns401WhenAccountIsLocked() {
         // Arrange — cria usuário com conta bloqueada diretamente via repository
+        // Beans obtained programmatically to avoid changing the Spring context cache key
+        var userRepository = applicationContext.getBean(UserRepository.class);
+        var roleRepository = applicationContext.getBean(RoleRepository.class);
+        var passwordEncoder = applicationContext.getBean(PasswordEncoder.class);
+
         var role = roleRepository.findAll().get(0);
         var rawPassword = "Test@1234";
         var lockedEmail = "locked-" + UUID.randomUUID() + "@test.com";

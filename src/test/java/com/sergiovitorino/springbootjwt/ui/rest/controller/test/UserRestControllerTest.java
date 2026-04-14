@@ -37,11 +37,14 @@ public class UserRestControllerTest {
     @Autowired
     private RoleRepository roleRepository;
     private static HttpHeaders headers;
+    private static Integer cachedPort;
 
     @BeforeEach
     public void setUp() {
-        if (headers == null)
+        if (headers == null || !port.equals(cachedPort)) {
             headers = new LoginHelper().createAuthenticatedHeader(restTemplete, port);
+            cachedPort = port;
+        }
     }
 
     @Test
@@ -270,8 +273,18 @@ public class UserRestControllerTest {
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         final var guestUser = mapper.readValue(createResponse.getBody(), UserResponse.class);
 
-        // Autentica como GUEST (tem USER_SAVE via ADMIN? Não — GUEST só tem USER_RETRIEVE e ROLE_RETRIEVE)
-        final var guestHeaders = new LoginHelper().createAuthenticatedHeader(restTemplete, port, guestEmail, guestPassword, "application/json");
+        // Autentica como GUEST
+        final var guestCredentials = "{\"username\":\"" + guestEmail + "\",\"password\":\"" + guestPassword + "\"}";
+        final var loginHeaders = new HttpHeaders();
+        loginHeaders.setContentType(MediaType.APPLICATION_JSON);
+        final var loginEntity = new HttpEntity<>(guestCredentials, loginHeaders);
+        final var loginResponse = restTemplete.exchange("http://localhost:" + port + "/login", HttpMethod.POST, loginEntity, String.class);
+        assertEquals(HttpStatus.OK, loginResponse.getStatusCode(), "Guest login failed: " + loginResponse.getBody());
+        final var guestToken = loginResponse.getHeaders().getFirst("Authorization");
+        assertNotNull(guestToken, "Authorization header missing from login response");
+        final var guestHeaders = new HttpHeaders();
+        guestHeaders.setContentType(MediaType.APPLICATION_JSON);
+        guestHeaders.add("Authorization", guestToken);
 
         // Tenta deletar outro usuário — deve retornar 403 pois GUEST não tem USER_DELETE
         final var adminUser = createUser();

@@ -10,6 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -19,11 +21,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class LoginRateLimitFilter extends OncePerRequestFilter {
 
-    static final int MAX_ATTEMPTS = 10;
     static final long WINDOW_MILLIS = 60_000L;
     private static final int MAX_CACHE_SIZE = 10_000;
 
+    private final int maxAttempts;
     private final ConcurrentHashMap<String, Deque<Long>> attempts = new ConcurrentHashMap<>();
+
+    public LoginRateLimitFilter(@Value("${login.rate-limit.max-attempts:10}") int maxAttempts) {
+        this.maxAttempts = maxAttempts;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -61,7 +67,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
             while (!timestamps.isEmpty() && now - timestamps.peekFirst() > WINDOW_MILLIS) {
                 timestamps.pollFirst();
             }
-            if (timestamps.size() >= MAX_ATTEMPTS) {
+            if (timestamps.size() >= maxAttempts) {
                 return true;
             }
             timestamps.addLast(now);
