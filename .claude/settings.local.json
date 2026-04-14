@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mvn clean test:*)",
+      "Bash(grep:*)",
+      "Bash(xargs cat:*)",
+      "Bash(javap:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn versions:display-dependency-updates:*)",
+      "Bash(mvn versions:display-plugin-updates:*)",
+      "Bash(more:*)"
+    ]
+  }
+}
