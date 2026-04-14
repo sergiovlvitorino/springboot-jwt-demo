@@ -34,7 +34,8 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        if ("POST".equalsIgnoreCase(request.getMethod()) && "/login".equals(request.getServletPath())) {
+        if ("POST".equalsIgnoreCase(request.getMethod())
+                && ("/login".equals(request.getServletPath()) || "/auth/refresh".equals(request.getServletPath()))) {
             String ip = extractClientIp(request);
             if (isRateLimited(ip)) {
                 response.setStatus(429);

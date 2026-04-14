@@ -8,7 +8,8 @@ CREATE TABLE refresh_token (
     expires_at  TIMESTAMP       NOT NULL,
     used        BOOLEAN         NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_refresh_token PRIMARY KEY (id),
-    CONSTRAINT uq_refresh_token_token UNIQUE (token)
+    CONSTRAINT uq_refresh_token_token UNIQUE (token),
+    CONSTRAINT fk_refresh_token_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE INDEX idx_refresh_token_user_id ON refresh_token (user_id);
