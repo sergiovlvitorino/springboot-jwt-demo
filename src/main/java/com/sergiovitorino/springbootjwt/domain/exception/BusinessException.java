@@ -1,7 +1,8 @@
 package com.sergiovitorino.springbootjwt.domain.exception;
 
-public class BusinessException extends RuntimeException {
-    public BusinessException(String message) {
+public abstract sealed class BusinessException extends RuntimeException
+        permits ResourceNotFoundException, EmailAlreadyExistsException {
+    protected BusinessException(String message) {
         super(message);
     }
 }

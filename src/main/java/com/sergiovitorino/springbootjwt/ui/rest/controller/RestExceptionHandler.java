@@ -1,7 +1,6 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjwt.domain.exception.BusinessException;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
@@ -38,11 +37,6 @@ public class RestExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<String> handleEmailAlreadyExists(EmailAlreadyExistsException exception) throws Exception {
         return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY, "EMAIL_ALREADY_EXISTS", exception);
-    }
-
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<String> handleBusinessException(BusinessException exception) throws Exception {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "BUSINESS_ERROR", exception);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

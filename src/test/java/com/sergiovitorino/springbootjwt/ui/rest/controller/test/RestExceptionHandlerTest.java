@@ -1,7 +1,6 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjwt.domain.exception.BusinessException;
 import com.sergiovitorino.springbootjwt.domain.exception.EmailAlreadyExistsException;
 import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
 import com.sergiovitorino.springbootjwt.infrastructure.ErrorBean;
@@ -49,15 +48,6 @@ public class RestExceptionHandlerTest {
 
         List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
         assertEquals("EMAIL_ALREADY_EXISTS", errors.get(0).errorCode());
-    }
-
-    @Test
-    public void testIfBusinessExceptionReturns400WithErrorCode() throws Exception {
-        var responseEntity = handler.handleBusinessException(new BusinessException("Invalid operation"));
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
-
-        List<ErrorBean> errors = mapper.readValue(responseEntity.getBody(), mapper.getTypeFactory().constructParametricType(List.class, ErrorBean.class));
-        assertEquals("BUSINESS_ERROR", errors.get(0).errorCode());
     }
 
     @Test
