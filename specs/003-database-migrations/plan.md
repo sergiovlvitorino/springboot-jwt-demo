@@ -83,18 +83,18 @@ Sem mudança de contrato externo.
 
 ## Constitutional Compliance Checklist
 
-- [x] Article I: N/A
-- [x] Article II: respeitado
-- [x] Article III: N/A
-- [x] Article IV: N/A
-- [x] Article V: seed restrito a dev/test
-- [x] Article VI: testes validam migrations
-- [x] Article VII: Flyway, validate, vendor-specific, BINARY UUID, `@PreUpdate`
-- [x] Article VIII: N/A
-- [x] Article IX: profiles configurados
-- [x] Article X: N/A
-- [x] Article XI: N/A
-- [x] Article XII: README atualizado
+- [x] Article I (Stack): Flyway introduzido como migration tool oficial (item 5) com layout vendor-specific `db/migration/h2/` e `db/migration/postgresql/`; bancos H2 (dev/test) e PostgreSQL (prod) confirmados
+- [x] Article II (Layers): migrations vivem em `src/main/resources/db/migration/`, auditoria em `domain/model/AbstractEntity`, seed em `infrastructure/Initialize`; sem mistura de camadas
+- [x] Article III (Records): N/A — feature trata schema e auditoria, sem novos DTOs
+- [x] Article IV (Exceptions): N/A — sem novas exceções de negócio
+- [x] Article V (Security): item 9 (soft-delete) preservado; risco crítico mitigado ao restringir `Initialize.java` a `@Profile({"dev","test"})`, evitando criação de admin com senha hardcoded em prod (AC-6)
+- [x] Article VI (Tests): suite verde após migrations (AC-10); testes de integração validam que `ddl-auto=validate` aceita o schema produzido pelo Flyway em ambos os vendors
+- [x] Article VII (Persistence): cobre TODOS os itens — Flyway versionado (item 1), `ddl-auto=validate` em prod (item 2, AC-9), migrations imutáveis (item 3), auditoria automática via `@PreUpdate` em `AbstractEntity.onPreUpdate()` (item 4, AC-7/AC-8), seed restrito a dev/test (item 5, AC-6), UUID BINARY com `BYTEA` em PG e `UUID` em H2 (item 6, AC-4)
+- [x] Article VIII (REST): N/A — sem mudança de contrato externo
+- [x] Article IX (Config): `application-dev.properties`, `application-test.properties` e `application-prod.properties` configuram Flyway location e `ddl-auto` por profile, alinhados aos profiles dev/test/prod (itens 2 e 3)
+- [x] Article X (CI/CD): N/A — sem mudança de pipeline (testes existentes validam migrations)
+- [x] Article XI (Container): N/A — containerização entregue em Spec 005, mas migrations preparam o terreno para o profile prod containerizado
+- [x] Article XII (Docs): README atualizado documentando estratégia de migrations, layout vendor-specific e comportamento do seed por profile
 
 ## Risks & Mitigations
 

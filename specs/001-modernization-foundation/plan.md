@@ -82,18 +82,18 @@ Nenhuma migration de banco.
 
 ## Constitutional Compliance Checklist
 
-- [x] Article I (Stack): Java 21 declarado em `system.properties`
-- [x] Article II (Layers): mudanças respeitam separação
-- [x] Article III (Records): `RoleResponse` é record
-- [x] Article IV (Exceptions): N/A
-- [x] Article V (Security): paginação limitada
-- [x] Article VI (Tests): `@MockitoBean`, suite verde
-- [x] Article VII (Persistence): N/A
-- [x] Article VIII (REST): DTO em vez de entidade, validação
-- [x] Article IX (Config): N/A
-- [x] Article X (CI/CD): GitHub Actions + Codecov + JaCoCo
-- [x] Article XI (Container): N/A (Sprint 5)
-- [x] Article XII (Docs): README atualizado
+- [x] Article I (Stack): `system.properties` declara `java.runtime.version=21`, alinhado ao Java 21 exigido pelo projeto (AC-3)
+- [x] Article II (Layers): `RoleResponse` reside em `application/command/role/`, controller em `ui/rest/controller/` apenas mapeia entidade → DTO, sem violar fronteiras
+- [x] Article III (Records): `RoleResponse` é declarado como `record` com factory `from(Role)`, alinhado ao mandato de DTOs imutáveis (AC-4, AC-5)
+- [x] Article IV (Exceptions): N/A — feature não introduz nem altera hierarquia de exceções de negócio
+- [x] Article V (Security): `@Max(100)` em `pageSize` mitiga DoS por consumo de memória em listagens públicas (AC-6); demais itens (BCrypt, JWT, headers, PII) inalterados
+- [x] Article VI (Tests): suite verde após mudanças (AC-8); `@MockitoBean` substitui `@MockBean` deprecated em `BaseContractTest` (AC-7)
+- [x] Article VII (Persistence): N/A — sem mudanças de schema, migrations ou auditoria
+- [x] Article VIII (REST): `GET /rest/role` retorna `RoleResponse` em vez de entidade `Role` (AC-4); `ListCommand.pageSize` valida `@Max(100)` retornando 400 quando excedido (AC-6)
+- [x] Article IX (Config): N/A — sem novas properties ou profiles
+- [x] Article X (CI/CD): `.github/workflows/maven.yml` substitui Travis (AC-1) e executa build, test, JaCoCo report e Codecov upload (AC-2)
+- [x] Article XI (Container): N/A — containerização entregue em Sprint 5 (Spec 005)
+- [x] Article XII (Docs): README atualizado refletindo o badge de cobertura e o schema `RoleResponse`
 
 ## Risks & Mitigations
 

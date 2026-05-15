@@ -87,18 +87,18 @@ Nenhuma migration de banco. Seed atualizado em `Initialize.java`.
 
 ## Constitutional Compliance Checklist
 
-- [x] Article I (Stack): N/A
-- [x] Article II (Layers): respeitado
-- [x] Article III (Records): N/A
-- [x] Article IV (Exceptions): handler 403 segue padrão
-- [x] Article V (Security): authorities granulares, rate limit, HSTS, CSP
-- [x] Article VI (Tests): novos testes para forbidden, XFF, headers
-- [x] Article VII (Persistence): seed em profile dev/test apenas
-- [x] Article VIII (REST): handler de erro padronizado
-- [x] Article IX (Config): N/A
-- [x] Article X (CI/CD): OWASP scan
-- [x] Article XI (Container): N/A
-- [x] Article XII (Docs): README atualizado
+- [x] Article I (Stack): N/A — sem alteração de versão de Java, Spring Boot, banco ou Maven
+- [x] Article II (Layers): authorities permanecem em `domain/model/AuthorityConstants`, filtro em `infrastructure/security/`, handler em `ui/rest/controller/`; sem vazamento de Spring Security para o domínio
+- [x] Article III (Records): N/A — feature não cria DTOs novos
+- [x] Article IV (Exceptions): handler para `AccessDeniedException` adicionado a `RestExceptionHandler` retornando 403 com `ErrorBean`, sem expor classe/stack trace e sem branch default
+- [x] Article V (Security): `USER_DELETE` separa privilégio (item 8); `LoginRateLimitFilter.extractClientIp()` lê `X-Forwarded-For` para rate limit correto atrás de proxy (item 5); HSTS `max-age=31536000; includeSubDomains` e CSP `default-src 'none'` adicionados (item 6); `@EnableMethodSecurity` ativa `@PreAuthorize` (bug latente corrigido)
+- [x] Article VI (Tests): novos testes cobrem 403 sem `USER_DELETE` (AC-2), XFF com IP único e múltiplos (AC-4 a AC-6), e presença de headers HSTS/CSP (AC-7 a AC-9)
+- [x] Article VII (Persistence): seed atualizado em `Initialize.java` (já restrito a `@Profile({"dev","test"})` por Spec 003); sem mudança de schema
+- [x] Article VIII (REST): respostas 403 padronizadas em `ErrorBean`; sem mudança de DTO ou paginação
+- [x] Article IX (Config): N/A — sem novas env vars ou profiles (`NVD_API_KEY` é apenas CI, não runtime)
+- [x] Article X (CI/CD): job dedicado `dependency-check` no `maven.yml` configurado para falhar build em CVSS ≥ 7 com `continue-on-error: true` durante adoção (AC-10 a AC-12)
+- [x] Article XI (Container): N/A — Dockerfile entregue em Spec 005
+- [x] Article XII (Docs): README atualizado descrevendo `USER_DELETE`, headers de segurança e escopo do rate limit; `dependency-check-suppressions.xml` documenta falsos positivos
 
 ## Risks & Mitigations
 

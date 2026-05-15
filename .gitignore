@@ -1,6 +1,6 @@
 HELP.md
 .claude/*
-!.claude/commands/
+!.claude/skills/
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 

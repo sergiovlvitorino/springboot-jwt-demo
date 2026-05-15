@@ -57,18 +57,18 @@ Nenhuma.
 
 ## Constitutional Compliance Checklist
 
-- [x] Article I: N/A
-- [x] Article II: respeitado (controller fino)
-- [x] Article III: `SaveCommand` é record
-- [x] Article IV: abstract sealed, subclasses final, sem default
-- [x] Article V: validators testados
-- [x] Article VI: cobertura ≥ 90% nos validators
-- [x] Article VII: N/A
-- [x] Article VIII: API inalterada
-- [x] Article IX: N/A
-- [x] Article X: N/A
-- [x] Article XI: N/A
-- [x] Article XII: N/A
+- [x] Article I (Stack): N/A — sem mudança de versão, banco ou build tool
+- [x] Article II (Layers): `UserRestController.post()` passa a apenas delegar para `UserService.save(SaveCommand)`; lookup de Role e construção da entidade migram para `application/service/`, controller deixa de injetar `RoleRepository` e `PasswordEncoder` (AC-6, AC-7)
+- [x] Article III (Records): `SaveCommand` continua como `record`; `UserService.save()` agora consome o record diretamente (AC-4)
+- [x] Article IV (Exceptions): `BusinessException` torna-se `abstract sealed class` com construtor `protected` (AC-1), `ResourceNotFoundException` e `EmailAlreadyExistsException` são `final` (AC-2), `RestExceptionHandler` ganha handler dedicado por subclasse sem branch default (AC-3) — alinhado a TODOS os 5 itens do artigo
+- [x] Article V (Security): novos testes garantem que `accountLocked=true` retorna 401 (AC-10) e que validators de XSS (`SafeHtmlValidator`) e força de senha (`StrongPasswordValidator`) funcionam corretamente
+- [x] Article VI (Tests): `SafeHtmlValidatorTest` (19 testes) e `StrongPasswordValidatorTest` (40 testes) atingem ≥ 90% de instruções e branches conforme item 2 do artigo (AC-8, AC-9); `LoginTest` cobre accountLocked (AC-10); suite verde (AC-11)
+- [x] Article VII (Persistence): N/A — sem mudança de schema ou auditoria
+- [x] Article VIII (REST): contrato de `POST /rest/user` permanece idêntico ao consumidor externo; `ErrorBean` mantém o formato de erro padronizado mesmo com handlers refatorados
+- [x] Article IX (Config): N/A — apenas `login.rate-limit.max-attempts=100` em test profile (já existente para evitar bloqueio durante testes)
+- [x] Article X (CI/CD): N/A — sem mudança de pipeline; cobertura adicional será refletida no relatório JaCoCo já configurado
+- [x] Article XI (Container): N/A — containerização tratada em Spec 005
+- [x] Article XII (Docs): N/A — feature é refator interno sem impacto em README, ADR ou Postman
 
 ## Risks & Mitigations
 

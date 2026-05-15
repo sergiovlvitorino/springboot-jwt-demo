@@ -87,18 +87,18 @@ Nenhuma nova dependência Maven.
 
 ## Constitutional Compliance Checklist
 
-- [x] Article I: Java 21 idioms (records, sealed)
-- [x] Article II: adapter em infra, domínio limpo
-- [x] Article III: DTOs como record
-- [x] Article IV: `InvalidRefreshTokenException` final, na `permits`
-- [x] Article V: rotation, claim, rate limit, validação, encoding senha
-- [x] Article VI: unit + integration tests para refresh token
-- [x] Article VII: migration vendor-specific, FK, audit
-- [x] Article VIII: validation no DTO, paginação N/A
-- [x] Article IX: env var `JWT_REFRESH_EXPIRATION`
-- [x] Article X: CI cobre
-- [x] Article XI: multi-stage, non-root, fail-fast vars
-- [x] Article XII: README + Postman atualizados
+- [x] Article I (Stack): novas classes usam idioms Java 21 (records para `RefreshRequest`/`TokenResponse`/`RefreshResult`, hierarquia sealed para `BusinessException`); migrations Flyway V3 separadas por vendor (`db/migration/h2/` e `db/migration/postgresql/`)
+- [x] Article II (Layers): `UserDetailsAdapter` em `infrastructure/security/` desacopla `User` (domínio) de `UserDetails` (Spring Security) — `User.java` deixa de importar Spring Security (AC-11, AC-12, AC-13); `RefreshTokenService` em `application/service/`, controller fino em `ui/rest/controller/AuthController`
+- [x] Article III (Records): `RefreshRequest`, `TokenResponse` e `RefreshResult` são `record`s imutáveis conforme exigência do artigo
+- [x] Article IV (Exceptions): `InvalidRefreshTokenException` é `final extends BusinessException` e adicionada à cláusula `permits` da sealed class; `RestExceptionHandler` ganha handler dedicado retornando 401 com `ErrorBean`, sem expor stack trace
+- [x] Article V (Security): rotation obrigatória — `used=true` no consumo invalida reuso (item 4, AC-3); claim `token_type` distingue access de refresh (item 3, AC-8); rate limit estendido a `/auth/refresh` (item 5, AC-9); `JWT_SECRET` via env var (item 2); BCrypt preservado (item 1); re-validação de `enabled` e `accountLocked` no refresh (AC-5, AC-6) reforça item 9 (soft-delete)
+- [x] Article VI (Tests): unit tests para `RefreshTokenService` (rotation, expiração, revalidação) e integration tests para `POST /auth/refresh` cobrindo todos os cenários AC-1 a AC-10; suite verde com 193+ testes (AC-23)
+- [x] Article VII (Persistence): `V3__refresh_tokens.sql` versionada e separada por vendor (item 1 e 5); `BYTEA` em PG / `UUID` em H2 mantém consistência com V1 (item 6); FK `refresh_token.user_id → users(id)`; auditoria automática herdada de `AbstractEntity` (item 4)
+- [x] Article VIII (REST): `RefreshRequest` valida `@NotBlank` no campo `refreshToken` (AC-10); erros via `ErrorBean`; OpenAPI atualizado em `contracts/auth.yaml`; paginação não se aplica
+- [x] Article IX (Config): `jwt.refresh-expiration` configurável (default 7 dias, AC-7); `DB_PASSWORD` e `JWT_SECRET` exigidos via fail-fast `${VAR:?}` em `docker-compose.yml` (AC-21); profiles dev/test/prod inalterados
+- [x] Article X (CI/CD): pipeline existente do `maven.yml` cobre os novos testes (build, JaCoCo, OWASP) sem alteração estrutural
+- [x] Article XI (Container): `Dockerfile` multi-stage com Maven JDK 21 → `eclipse-temurin:21-jre` (AC-17, itens 1 e 2); container roda como `non-root user` (AC-18, item 3); `${VAR:?}` garante fail-fast em `DB_PASSWORD` e `JWT_SECRET` (AC-21, item 4); PostgreSQL apenas em rede interna do compose, não publicado em prod (AC-22, item 5)
+- [x] Article XII (Docs): README atualizado com fluxo de refresh token, comandos `docker compose`, variáveis de ambiente; coleção Postman sincronizada com `POST /auth/refresh` (item 4); `data-model.md` e `contracts/auth.yaml` documentam entidade e contrato
 
 ## Risks & Mitigations
 
