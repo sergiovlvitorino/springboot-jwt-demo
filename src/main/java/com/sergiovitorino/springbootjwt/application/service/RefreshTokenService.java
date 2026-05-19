@@ -82,6 +82,10 @@ public class RefreshTokenService {
         refreshToken.markUsed();
         refreshTokenRepository.save(refreshToken);
 
+        UUID userId = user.getId();
+        refreshTokenRepository.revokeAllActiveByUserId(userId, LocalDateTime.now());
+        log.info("Rotation: revoked all active refresh tokens for userId={}", userId);
+
         String authorities = user.getRole().getAuthorities().stream()
                 .map(a -> a.getName())
                 .collect(Collectors.joining(","));

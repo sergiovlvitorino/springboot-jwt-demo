@@ -87,6 +87,30 @@ class RefreshTokenServiceTest {
     }
 
     @Test
+    void refreshAccessToken_success_revokesParallelTokensAfterRotation() {
+        UUID userId = UUID.randomUUID();
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+
+        Authority authority = new Authority("ROLE_USER");
+        Role role = new Role("USER", List.of(authority));
+        User user = new User(userId, "Test User", "test@test.com", "pw", true, role);
+
+        RefreshToken refreshToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().plusDays(7));
+
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
+        when(userRepository.findByIdWithAuthorities(userId)).thenReturn(Optional.of(user));
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArgument(0));
+        when(tokenAuthenticationService.generateAccessToken(any(), any(), any())).thenReturn("new-access-token");
+        when(refreshTokenRepository.revokeAllActiveByUserId(eq(userId), any(LocalDateTime.class))).thenReturn(1);
+
+        refreshTokenService.refreshAccessToken(rawToken);
+
+        // must revoke parallel tokens in the valid rotation path too
+        verify(refreshTokenRepository).revokeAllActiveByUserId(eq(userId), any(LocalDateTime.class));
+    }
+
+    @Test
     void refreshAccessToken_tokenNotFound_throwsException() {
         String rawToken = RefreshTokenHasher.generateToken();
         String tokenHash = RefreshTokenHasher.hash(rawToken);

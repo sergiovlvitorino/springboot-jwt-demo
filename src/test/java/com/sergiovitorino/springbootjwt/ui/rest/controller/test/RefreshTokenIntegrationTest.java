@@ -128,6 +128,35 @@ class RefreshTokenIntegrationTest {
     }
 
     @Test
+    void postAuthRefresh_parallelToken_isRevokedAfterValidRotation() throws Exception {
+        // Login twice to produce two parallel refresh tokens for the same user
+        ResponseEntity<String> login1 = doLogin("abc@def.com", "Test@1234");
+        JsonNode body1 = objectMapper.readTree(login1.getBody());
+        String firstToken = body1.get("refreshToken").asText();
+
+        ResponseEntity<String> login2 = doLogin("abc@def.com", "Test@1234");
+        JsonNode body2 = objectMapper.readTree(login2.getBody());
+        String secondToken = body2.get("refreshToken").asText();
+
+        // Use the first token — valid rotation; should revoke the parallel second token
+        String requestBody = "{\"refreshToken\":\"" + firstToken + "\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<String> rotateResponse = restTemplate.exchange(
+                baseUrl() + "/auth/refresh", HttpMethod.POST, entity, String.class);
+        assertEquals(HttpStatus.OK.value(), rotateResponse.getStatusCode().value());
+
+        // The second token must now be invalid (revoked by chain revocation)
+        String parallelRequest = "{\"refreshToken\":\"" + secondToken + "\"}";
+        HttpEntity<String> parallelEntity = new HttpEntity<>(parallelRequest, headers);
+        ResponseEntity<String> parallelResponse = restTemplate.exchange(
+                baseUrl() + "/auth/refresh", HttpMethod.POST, parallelEntity, String.class);
+
+        assertEquals(HttpStatus.UNAUTHORIZED.value(), parallelResponse.getStatusCode().value());
+    }
+
+    @Test
     void postAuthRefresh_withInvalidToken_returns401() {
         String requestBody = "{\"refreshToken\":\"" + RefreshTokenHasher.generateToken() + "\"}";
         HttpHeaders headers = new HttpHeaders();
