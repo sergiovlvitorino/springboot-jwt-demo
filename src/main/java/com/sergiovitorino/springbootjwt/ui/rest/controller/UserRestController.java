@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.sergiovitorino.springbootjwt.application.command.user.*;
 import com.sergiovitorino.springbootjwt.application.service.UserService;
+import com.sergiovitorino.springbootjwt.infrastructure.security.PiiMasker;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,7 +64,7 @@ public class UserRestController {
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PostMapping
     public ResponseEntity<UserResponse> post(@RequestBody @Valid SaveCommand command) {
-        log.debug("POST /rest/user - Creating user with email: {}", command.email());
+        log.debug("POST /rest/user - Creating user with email: {}", PiiMasker.maskEmail(command.email()));
         return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(userService.save(command)));
     }
 

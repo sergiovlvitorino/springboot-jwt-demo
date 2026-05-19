@@ -8,22 +8,22 @@ class JWTLoginFilterTest {
 
     @Test
     void shouldMaskEmailCorrectly() {
-        assertEquals("a***@def.com", JWTLoginFilter.maskEmail("abc@def.com"));
-        assertEquals("s***@example.com", JWTLoginFilter.maskEmail("sergio@example.com"));
+        assertEquals("a***@def.com", PiiMasker.maskEmail("abc@def.com"));
+        assertEquals("s***@example.com", PiiMasker.maskEmail("sergio@example.com"));
     }
 
     @Test
     void shouldMaskShortEmail() {
-        assertEquals("*@x.com", JWTLoginFilter.maskEmail("a@x.com"));
+        assertEquals("*@x.com", PiiMasker.maskEmail("a@x.com"));
     }
 
     @Test
     void shouldMaskNullEmail() {
-        assertEquals("***", JWTLoginFilter.maskEmail(null));
+        assertEquals("***", PiiMasker.maskEmail(null));
     }
 
     @Test
     void shouldMaskEmailWithoutAtSign() {
-        assertEquals("***", JWTLoginFilter.maskEmail("noemail"));
+        assertEquals("***", PiiMasker.maskEmail("noemail"));
     }
 }

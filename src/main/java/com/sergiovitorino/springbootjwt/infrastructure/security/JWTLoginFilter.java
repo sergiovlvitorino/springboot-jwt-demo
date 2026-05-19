@@ -57,7 +57,7 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
     protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res,
                                             FilterChain chain, Authentication auth) throws IOException, ServletException {
         String clientIp = req.getRemoteAddr();
-        log.info("Login successful for user: {} from IP: {}", maskEmail(auth.getName()), clientIp);
+        log.info("Login successful for user: {} from IP: {}", PiiMasker.maskEmail(auth.getName()), clientIp);
 
         tokenAuthenticationService.addAuthentication(res, auth.getName());
 
@@ -79,10 +79,4 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
         objectMapper.writeValue(res.getWriter(), body);
     }
 
-    static String maskEmail(String email) {
-        if (email == null || !email.contains("@")) return "***";
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 1) return "*" + email.substring(atIndex);
-        return email.charAt(0) + "***" + email.substring(atIndex);
-    }
 }

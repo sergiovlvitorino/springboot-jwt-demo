@@ -6,6 +6,7 @@ import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundExcepti
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.security.PiiMasker;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserDetailsAdapter;
 import com.sergiovitorino.springbootjwt.infrastructure.security.UserLogged;
 import org.slf4j.Logger;
@@ -78,7 +79,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public User save(SaveCommand command) {
         repository.findByEmail(command.email()).ifPresent(existing -> {
-            log.warn("Attempt to create user with existing email: {}", command.email());
+            log.warn("Attempt to create user with existing email: {}", PiiMasker.maskEmail(command.email()));
             throw new EmailAlreadyExistsException("E-mail already");
         });
 
@@ -98,7 +99,7 @@ public class UserService implements UserDetailsService {
         user.setAccountLocked(false);
 
         User savedUser = repository.save(user);
-        log.info("User created: id={}, email={}", savedUser.getId(), savedUser.getEmail());
+        log.info("User created: id={}, email={}", savedUser.getId(), PiiMasker.maskEmail(savedUser.getEmail()));
         return savedUser;
     }
 
@@ -126,7 +127,7 @@ public class UserService implements UserDetailsService {
         user.setDateDisabledAt(LocalDateTime.now());
         user.setUserIdDisabledAt(getAuditUserId());
         User disabledUser = repository.save(user);
-        log.info("User disabled: id={}, email={}", disabledUser.getId(), disabledUser.getEmail());
+        log.info("User disabled: id={}, email={}", disabledUser.getId(), PiiMasker.maskEmail(disabledUser.getEmail()));
         return disabledUser;
     }
 
