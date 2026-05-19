@@ -7,6 +7,7 @@ import com.sergiovitorino.springbootjwt.domain.model.Role;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RefreshTokenRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.security.RefreshTokenHasher;
 import com.sergiovitorino.springbootjwt.infrastructure.security.TokenAuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,69 +49,81 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    void createRefreshToken_savesAndReturnsToken() {
+    void createRefreshToken_savesAndReturnsRawToken() {
         UUID userId = UUID.randomUUID();
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArgument(0));
 
-        String token = refreshTokenService.createRefreshToken(userId);
+        String rawToken = refreshTokenService.createRefreshToken(userId);
 
-        assertThat(token).isNotNull().isNotBlank();
+        assertThat(rawToken).isNotNull().isNotBlank();
+        // raw token must NOT be the hash (hash is 64 hex chars)
+        assertThat(rawToken).hasSizeLessThan(64).doesNotMatch("[0-9a-f]{64}");
         verify(refreshTokenRepository).save(any(RefreshToken.class));
     }
 
     @Test
     void refreshAccessToken_success() {
         UUID userId = UUID.randomUUID();
-        String tokenValue = UUID.randomUUID().toString();
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
 
         Authority authority = new Authority("ROLE_USER");
         Role role = new Role("USER", List.of(authority));
         User user = new User(userId, "Test User", "test@test.com", "pw", true, role);
 
-        RefreshToken refreshToken = new RefreshToken(tokenValue, userId, LocalDateTime.now().plusDays(7));
+        RefreshToken refreshToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().plusDays(7));
 
-        when(refreshTokenRepository.findByToken(tokenValue)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
         when(userRepository.findByIdWithAuthorities(userId)).thenReturn(Optional.of(user));
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(i -> i.getArgument(0));
         when(tokenAuthenticationService.generateAccessToken(any(), any(), any())).thenReturn("new-access-token");
 
-        RefreshTokenService.RefreshResult result = refreshTokenService.refreshAccessToken(tokenValue);
+        RefreshTokenService.RefreshResult result = refreshTokenService.refreshAccessToken(rawToken);
 
         assertThat(result.accessToken()).isEqualTo("new-access-token");
         assertThat(result.refreshToken()).isNotNull();
         assertThat(refreshToken.isUsed()).isTrue();
+        assertThat(refreshToken.getUsedAt()).isNotNull();
     }
 
     @Test
     void refreshAccessToken_tokenNotFound_throwsException() {
-        when(refreshTokenRepository.findByToken("unknown")).thenReturn(Optional.empty());
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken("unknown"))
+        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(rawToken))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("Invalid refresh token");
     }
 
     @Test
-    void refreshAccessToken_tokenAlreadyUsed_throwsException() {
-        String tokenValue = UUID.randomUUID().toString();
-        RefreshToken usedToken = new RefreshToken(tokenValue, UUID.randomUUID(), LocalDateTime.now().plusDays(7));
+    void refreshAccessToken_tokenAlreadyUsed_revokesAllAndThrows() {
+        UUID userId = UUID.randomUUID();
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        RefreshToken usedToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().plusDays(7));
         usedToken.setUsed(true);
 
-        when(refreshTokenRepository.findByToken(tokenValue)).thenReturn(Optional.of(usedToken));
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(usedToken));
+        when(refreshTokenRepository.revokeAllActiveByUserId(eq(userId), any(LocalDateTime.class))).thenReturn(0);
 
-        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(tokenValue))
+        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(rawToken))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("already been used");
+
+        verify(refreshTokenRepository).revokeAllActiveByUserId(eq(userId), any(LocalDateTime.class));
     }
 
     @Test
     void refreshAccessToken_tokenExpired_throwsException() {
-        String tokenValue = UUID.randomUUID().toString();
-        RefreshToken expiredToken = new RefreshToken(tokenValue, UUID.randomUUID(), LocalDateTime.now().minusDays(1));
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        RefreshToken expiredToken = new RefreshToken(tokenHash, UUID.randomUUID(), LocalDateTime.now().minusDays(1));
 
-        when(refreshTokenRepository.findByToken(tokenValue)).thenReturn(Optional.of(expiredToken));
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(expiredToken));
 
-        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(tokenValue))
+        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(rawToken))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("expired");
     }
@@ -117,15 +131,16 @@ class RefreshTokenServiceTest {
     @Test
     void refreshAccessToken_userDisabled_throwsException() {
         UUID userId = UUID.randomUUID();
-        String tokenValue = UUID.randomUUID().toString();
-        RefreshToken refreshToken = new RefreshToken(tokenValue, userId, LocalDateTime.now().plusDays(7));
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        RefreshToken refreshToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().plusDays(7));
 
         User disabledUser = new User(userId, "Test", "test@test.com", "pw", false, new Role());
 
-        when(refreshTokenRepository.findByToken(tokenValue)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
         when(userRepository.findByIdWithAuthorities(userId)).thenReturn(Optional.of(disabledUser));
 
-        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(tokenValue))
+        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(rawToken))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("disabled");
     }
@@ -133,16 +148,17 @@ class RefreshTokenServiceTest {
     @Test
     void refreshAccessToken_userLocked_throwsException() {
         UUID userId = UUID.randomUUID();
-        String tokenValue = UUID.randomUUID().toString();
-        RefreshToken refreshToken = new RefreshToken(tokenValue, userId, LocalDateTime.now().plusDays(7));
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        RefreshToken refreshToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().plusDays(7));
 
         User lockedUser = new User(userId, "Test", "test@test.com", "pw", true, new Role());
         lockedUser.setAccountLocked(true);
 
-        when(refreshTokenRepository.findByToken(tokenValue)).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenRepository.findByTokenHash(tokenHash)).thenReturn(Optional.of(refreshToken));
         when(userRepository.findByIdWithAuthorities(userId)).thenReturn(Optional.of(lockedUser));
 
-        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(tokenValue))
+        assertThatThrownBy(() -> refreshTokenService.refreshAccessToken(rawToken))
                 .isInstanceOf(InvalidRefreshTokenException.class)
                 .hasMessageContaining("locked");
     }

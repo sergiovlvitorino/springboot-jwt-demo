@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiovitorino.springbootjwt.domain.model.RefreshToken;
 import com.sergiovitorino.springbootjwt.domain.repository.RefreshTokenRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.security.RefreshTokenHasher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -99,20 +100,23 @@ class RefreshTokenIntegrationTest {
 
     @Test
     void postAuthRefresh_withExpiredToken_returns401() throws Exception {
-        UUID userId = UUID.fromString(
-                refreshTokenRepository.findAll().stream()
-                        .findFirst()
-                        .map(t -> t.getUserId().toString())
-                        .orElse(UUID.randomUUID().toString())
-        );
+        UUID userId = refreshTokenRepository.findAll().stream()
+                .findFirst()
+                .map(RefreshToken::getUserId)
+                .orElseGet(() -> {
+                    doLogin("abc@def.com", "Test@1234");
+                    return refreshTokenRepository.findAll().stream()
+                            .findFirst()
+                            .map(RefreshToken::getUserId)
+                            .orElse(UUID.randomUUID());
+                });
 
-        doLogin("abc@def.com", "Test@1234");
-
-        String expiredTokenValue = UUID.randomUUID().toString();
-        RefreshToken expiredToken = new RefreshToken(expiredTokenValue, userId, LocalDateTime.now().minusDays(1));
+        String rawExpiredToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawExpiredToken);
+        RefreshToken expiredToken = new RefreshToken(tokenHash, userId, LocalDateTime.now().minusDays(1));
         refreshTokenRepository.save(expiredToken);
 
-        String requestBody = "{\"refreshToken\":\"" + expiredTokenValue + "\"}";
+        String requestBody = "{\"refreshToken\":\"" + rawExpiredToken + "\"}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
@@ -125,7 +129,7 @@ class RefreshTokenIntegrationTest {
 
     @Test
     void postAuthRefresh_withInvalidToken_returns401() {
-        String requestBody = "{\"refreshToken\":\"" + UUID.randomUUID() + "\"}";
+        String requestBody = "{\"refreshToken\":\"" + RefreshTokenHasher.generateToken() + "\"}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);

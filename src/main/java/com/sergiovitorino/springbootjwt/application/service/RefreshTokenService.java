@@ -5,6 +5,7 @@ import com.sergiovitorino.springbootjwt.domain.model.RefreshToken;
 import com.sergiovitorino.springbootjwt.domain.model.User;
 import com.sergiovitorino.springbootjwt.domain.repository.RefreshTokenRepository;
 import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
+import com.sergiovitorino.springbootjwt.infrastructure.security.RefreshTokenHasher;
 import com.sergiovitorino.springbootjwt.infrastructure.security.TokenAuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,21 +39,25 @@ public class RefreshTokenService {
 
     @Transactional
     public String createRefreshToken(UUID userId) {
-        String tokenValue = UUID.randomUUID().toString();
+        String rawToken = RefreshTokenHasher.generateToken();
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
         LocalDateTime expiresAt = LocalDateTime.now().plusNanos(refreshExpirationMs * 1_000_000L);
-        var refreshToken = new RefreshToken(tokenValue, userId, expiresAt);
+        var refreshToken = new RefreshToken(tokenHash, userId, expiresAt);
         refreshTokenRepository.save(refreshToken);
         log.debug("Refresh token created for userId={}", userId);
-        return tokenValue;
+        return rawToken;
     }
 
     @Transactional
-    public RefreshResult refreshAccessToken(String refreshTokenValue) {
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
+    public RefreshResult refreshAccessToken(String rawToken) {
+        String tokenHash = RefreshTokenHasher.hash(rawToken);
+        RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token"));
 
         if (refreshToken.isUsed()) {
-            log.warn("Attempt to reuse refresh token: tokenId={}", refreshToken.getId());
+            UUID userId = refreshToken.getUserId();
+            log.warn("Refresh token reuse detected - revoking all tokens for userId={}", userId);
+            refreshTokenRepository.revokeAllActiveByUserId(userId, LocalDateTime.now());
             throw new InvalidRefreshTokenException("Refresh token has already been used");
         }
 
@@ -74,7 +79,7 @@ public class RefreshTokenService {
             throw new InvalidRefreshTokenException("User account is locked");
         }
 
-        refreshToken.setUsed(true);
+        refreshToken.markUsed();
         refreshTokenRepository.save(refreshToken);
 
         String authorities = user.getRole().getAuthorities().stream()
