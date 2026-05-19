@@ -25,10 +25,14 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_CACHE_SIZE = 10_000;
 
     private final int maxAttempts;
+    private final boolean trustedProxyEnabled;
     private final ConcurrentHashMap<String, Deque<Long>> attempts = new ConcurrentHashMap<>();
 
-    public LoginRateLimitFilter(@Value("${login.rate-limit.max-attempts:10}") int maxAttempts) {
+    public LoginRateLimitFilter(
+            @Value("${login.rate-limit.max-attempts:10}") int maxAttempts,
+            @Value("${security.trusted-proxy.enabled:false}") boolean trustedProxyEnabled) {
         this.maxAttempts = maxAttempts;
+        this.trustedProxyEnabled = trustedProxyEnabled;
     }
 
     @Override
@@ -48,11 +52,13 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     }
 
     String extractClientIp(HttpServletRequest request) {
-        String xff = request.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            String firstIp = xff.split(",")[0].trim();
-            if (!firstIp.isEmpty()) {
-                return firstIp;
+        if (trustedProxyEnabled) {
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isBlank()) {
+                String firstIp = xff.split(",")[0].trim();
+                if (!firstIp.isEmpty()) {
+                    return firstIp;
+                }
             }
         }
         return request.getRemoteAddr();
