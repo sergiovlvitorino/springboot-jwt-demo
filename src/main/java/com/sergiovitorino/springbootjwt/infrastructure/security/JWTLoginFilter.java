@@ -26,15 +26,18 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final TokenAuthenticationService tokenAuthenticationService;
     private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JWTLoginFilter(String url, AuthenticationManager authManager,
                           TokenAuthenticationService tokenAuthenticationService,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService,
+                          LoginAttemptService loginAttemptService) {
         super(new AntPathRequestMatcher(url));
         setAuthenticationManager(authManager);
         this.tokenAuthenticationService = tokenAuthenticationService;
         this.refreshTokenService = refreshTokenService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Override
@@ -49,6 +52,7 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
             );
         } catch (AuthenticationException e) {
             log.warn("Login failed from IP: {} - Reason: {}", clientIp, e.getMessage());
+            loginAttemptService.loginFailed(accountCredentials.username());
             throw e;
         }
     }
@@ -58,6 +62,7 @@ public class JWTLoginFilter extends AbstractAuthenticationProcessingFilter {
                                             FilterChain chain, Authentication auth) throws IOException, ServletException {
         String clientIp = req.getRemoteAddr();
         log.info("Login successful for user: {} from IP: {}", PiiMasker.maskEmail(auth.getName()), clientIp);
+        loginAttemptService.loginSucceeded(auth.getName());
 
         tokenAuthenticationService.addAuthentication(res, auth.getName());
 

@@ -26,14 +26,17 @@ public class WebSecurityConfig {
 
     private final TokenAuthenticationService tokenAuthenticationService;
     private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
 
     @Value("${springdoc.api-docs.enabled:true}")
     private boolean apiDocsEnabled;
 
     public WebSecurityConfig(TokenAuthenticationService tokenAuthenticationService,
-                             RefreshTokenService refreshTokenService) {
+                             RefreshTokenService refreshTokenService,
+                             LoginAttemptService loginAttemptService) {
         this.tokenAuthenticationService = tokenAuthenticationService;
         this.refreshTokenService = refreshTokenService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Bean
@@ -41,7 +44,7 @@ public class WebSecurityConfig {
                                            AuthenticationManager authenticationManager,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager,
-                tokenAuthenticationService, refreshTokenService);
+                tokenAuthenticationService, refreshTokenService, loginAttemptService);
 
         http.cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
