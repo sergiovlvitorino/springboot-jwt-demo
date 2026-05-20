@@ -1,0 +1,28 @@
+# Pre-commit hooks — https://pre-commit.com
+#
+# One-time setup (per clone):
+#   pip install --user pre-commit
+#   pre-commit install
+#
+# If `pre-commit install` complains about `core.hooksPath`, unset it for this
+# repo only:
+#   git config --local --unset core.hooksPath
+#   pre-commit install
+#
+# Hooks then run automatically on `git commit`. To run manually:
+#   pre-commit run --all-files
+#
+# ggshield requires authentication once per machine:
+#   ggshield auth login           # interactive
+# OR export GITGUARDIAN_API_KEY (CI: store as secret).
+#
+# Local config in .gitguardian.yml declares which paths are documentation
+# (not actual secrets) and are excluded from scanning.
+
+repos:
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.34.0
+    hooks:
+      - id: ggshield
+        language_version: python3
+        stages: [pre-commit]
