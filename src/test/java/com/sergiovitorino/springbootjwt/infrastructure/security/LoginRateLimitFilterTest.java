@@ -198,6 +198,44 @@ class LoginRateLimitFilterTest {
         assertFalse(filter.getAttempts().containsKey("expired-ip"));
     }
 
+    @Test
+    void isRateLimited_shouldEvictWhenCacheSizeExceedsMax() {
+        // Preenche o cache com entradas expiradas (timestamps zerados para simular expiração)
+        // MAX_CACHE_SIZE = 10_000 (private na classe de producao)
+        int maxCacheSize = 10_000;
+        for (int i = 0; i < maxCacheSize; i++) {
+            String ip = "10.1." + (i / 256) + "." + (i % 256);
+            // Adiciona diretamente ao mapa com timestamp antigo (já expirado)
+            filter.getAttempts().computeIfAbsent(ip, k -> new java.util.ArrayDeque<>())
+                    .addLast(System.currentTimeMillis() - LoginRateLimitFilter.WINDOW_MILLIS - 1);
+        }
+
+        // Cache está cheio — chamar isRateLimited deve acionar evictExpiredEntries()
+        assertEquals(maxCacheSize, filter.getAttempts().size());
+        filter.isRateLimited("new-ip-after-eviction");
+
+        // Após eviction, entradas expiradas foram removidas
+        assertFalse(filter.getAttempts().containsKey("10.1.0.0"),
+                "Entradas expiradas devem ter sido removidas pela eviction");
+    }
+
+    @Test
+    void extractClientIp_shouldUseRemoteAddrWhenXffFirstSegmentIsEmpty() throws Exception {
+        // XFF com primeiro segmento vazio (ex: ", 1.2.3.4") → deve usar remoteAddr
+        var request = createLoginRequest("192.168.99.99");
+        request.addHeader("X-Forwarded-For", ", 1.2.3.4");
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+
+        filter.doFilterInternal(request, response, chain);
+
+        // O tracking deve usar o remoteAddr, nao o IP do XFF
+        assertTrue(filter.getAttempts().containsKey("192.168.99.99"),
+                "Deve usar remoteAddr quando primeiro segmento do XFF é vazio");
+        assertFalse(filter.getAttempts().containsKey("1.2.3.4"));
+        assertFalse(filter.getAttempts().containsKey(""));
+    }
+
     private MockHttpServletRequest createLoginRequest(String remoteAddr) {
         var request = new MockHttpServletRequest("POST", "/login");
         request.setServletPath("/login");
