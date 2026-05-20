@@ -10,11 +10,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LoginRateLimitFilterTest {
 
+    private static final int TEST_MAX_ATTEMPTS = 10;
+
     private LoginRateLimitFilter filter;
+    private LoginRateLimitFilter filterWithTrustedProxy;
 
     @BeforeEach
     void setUp() {
-        filter = new LoginRateLimitFilter();
+        filter = new LoginRateLimitFilter(TEST_MAX_ATTEMPTS, false);
+        filterWithTrustedProxy = new LoginRateLimitFilter(TEST_MAX_ATTEMPTS, true);
     }
 
     @Test
@@ -32,7 +36,7 @@ class LoginRateLimitFilterTest {
     void shouldBlockRequestsAboveLimit() throws Exception {
         String ip = "10.0.0.1";
 
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             assertFalse(filter.isRateLimited(ip), "Request " + i + " should not be rate limited");
         }
 
@@ -43,7 +47,7 @@ class LoginRateLimitFilterTest {
     void shouldReturn429WhenRateLimited() throws Exception {
         String ip = "10.0.0.2";
 
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             filter.isRateLimited(ip);
         }
 
@@ -71,7 +75,7 @@ class LoginRateLimitFilterTest {
 
     @Test
     void shouldTrackDifferentIpsSeparately() {
-        for (int i = 0; i < LoginRateLimitFilter.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
             filter.isRateLimited("ip1");
         }
         assertTrue(filter.isRateLimited("ip1"));
@@ -79,17 +83,108 @@ class LoginRateLimitFilterTest {
     }
 
     @Test
-    void shouldUseRemoteAddrNotXForwardedFor() throws Exception {
+    void shouldUseXForwardedForWhenProxyTrusted() throws Exception {
         var request = createLoginRequest("192.168.1.100");
         request.addHeader("X-Forwarded-For", "1.2.3.4");
         var response = new MockHttpServletResponse();
         var chain = new MockFilterChain();
 
+        filterWithTrustedProxy.doFilterInternal(request, response, chain);
+
+        assertTrue(filterWithTrustedProxy.getAttempts().containsKey("1.2.3.4"));
+        assertFalse(filterWithTrustedProxy.getAttempts().containsKey("192.168.1.100"));
+    }
+
+    @Test
+    void extractClientIp_shouldReturnFirstIpFromXForwardedForChainWhenProxyTrusted() {
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("10.0.0.1");
+        request.addHeader("X-Forwarded-For", "1.2.3.4, 10.0.0.1, 172.16.0.1");
+
+        String clientIp = filterWithTrustedProxy.extractClientIp(request);
+
+        assertEquals("1.2.3.4", clientIp);
+    }
+
+    @Test
+    void extractClientIp_shouldFallbackToRemoteAddrWhenXffAbsent() {
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("203.0.113.5");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("203.0.113.5", clientIp);
+    }
+
+    @Test
+    void extractClientIp_shouldFallbackToRemoteAddrWhenXffIsBlank() {
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("203.0.113.5");
+        request.addHeader("X-Forwarded-For", "   ");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("203.0.113.5", clientIp);
+    }
+
+    @Test
+    void extractClientIp_shouldIgnoreXffWhenProxyNotTrusted() {
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr("10.0.0.1");
+        request.addHeader("X-Forwarded-For", "1.2.3.4");
+
+        String clientIp = filter.extractClientIp(request);
+
+        assertEquals("10.0.0.1", clientIp);
+    }
+
+    @Test
+    void bruteForceWithVariableXff_shouldRateLimitByRemoteAddrWhenProxyNotTrusted() throws Exception {
+        // Atacante varia o XFF para tentar bypassar rate limit — deve ser bloqueado pelo remoteAddr
+        String attackerRemoteAddr = "10.10.10.10";
+
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
+            filter.isRateLimited(attackerRemoteAddr);
+        }
+
+        // Próximo request com XFF variado mas mesmo remoteAddr deve ser bloqueado
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr(attackerRemoteAddr);
+        request.addHeader("X-Forwarded-For", "9.9.9." + (TEST_MAX_ATTEMPTS + 1));
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+
         filter.doFilterInternal(request, response, chain);
 
-        // Rate limit tracking should use remoteAddr, not X-Forwarded-For
-        assertTrue(filter.getAttempts().containsKey("192.168.1.100"));
-        assertFalse(filter.getAttempts().containsKey("1.2.3.4"));
+        assertEquals(429, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Too many login attempts"));
+    }
+
+    @Test
+    void shouldRateLimitBasedOnXForwardedForIpWhenProxyTrusted() throws Exception {
+        String realClientIp = "5.5.5.5";
+        String proxyIp = "10.10.10.10";
+
+        for (int i = 0; i < TEST_MAX_ATTEMPTS; i++) {
+            filterWithTrustedProxy.isRateLimited(realClientIp);
+        }
+
+        var request = new MockHttpServletRequest("POST", "/login");
+        request.setServletPath("/login");
+        request.setRemoteAddr(proxyIp);
+        request.addHeader("X-Forwarded-For", realClientIp);
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+
+        filterWithTrustedProxy.doFilterInternal(request, response, chain);
+
+        assertEquals(429, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Too many login attempts"));
     }
 
     @Test
@@ -97,11 +192,48 @@ class LoginRateLimitFilterTest {
         filter.isRateLimited("expired-ip");
         assertFalse(filter.getAttempts().isEmpty());
 
-        // Manually clear timestamps to simulate expiration
         filter.getAttempts().get("expired-ip").clear();
         filter.evictExpiredEntries();
 
         assertFalse(filter.getAttempts().containsKey("expired-ip"));
+    }
+
+    @Test
+    void isRateLimited_shouldEvictWhenCacheSizeExceedsMax() {
+        // Preenche o cache com entradas expiradas (timestamps zerados para simular expiração)
+        // MAX_CACHE_SIZE = 10_000 (private na classe de producao)
+        int maxCacheSize = 10_000;
+        for (int i = 0; i < maxCacheSize; i++) {
+            String ip = "10.1." + (i / 256) + "." + (i % 256);
+            // Adiciona diretamente ao mapa com timestamp antigo (já expirado)
+            filter.getAttempts().computeIfAbsent(ip, k -> new java.util.ArrayDeque<>())
+                    .addLast(System.currentTimeMillis() - LoginRateLimitFilter.WINDOW_MILLIS - 1);
+        }
+
+        // Cache está cheio — chamar isRateLimited deve acionar evictExpiredEntries()
+        assertEquals(maxCacheSize, filter.getAttempts().size());
+        filter.isRateLimited("new-ip-after-eviction");
+
+        // Após eviction, entradas expiradas foram removidas
+        assertFalse(filter.getAttempts().containsKey("10.1.0.0"),
+                "Entradas expiradas devem ter sido removidas pela eviction");
+    }
+
+    @Test
+    void extractClientIp_shouldUseRemoteAddrWhenXffFirstSegmentIsEmpty() throws Exception {
+        // XFF com primeiro segmento vazio (ex: ", 1.2.3.4") → deve usar remoteAddr
+        var request = createLoginRequest("192.168.99.99");
+        request.addHeader("X-Forwarded-For", ", 1.2.3.4");
+        var response = new MockHttpServletResponse();
+        var chain = new MockFilterChain();
+
+        filter.doFilterInternal(request, response, chain);
+
+        // O tracking deve usar o remoteAddr, nao o IP do XFF
+        assertTrue(filter.getAttempts().containsKey("192.168.99.99"),
+                "Deve usar remoteAddr quando primeiro segmento do XFF é vazio");
+        assertFalse(filter.getAttempts().containsKey("1.2.3.4"));
+        assertFalse(filter.getAttempts().containsKey(""));
     }
 
     private MockHttpServletRequest createLoginRequest(String remoteAddr) {

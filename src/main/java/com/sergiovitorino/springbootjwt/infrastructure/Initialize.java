@@ -10,6 +10,7 @@ import com.sergiovitorino.springbootjwt.domain.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -17,6 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.UUID;
 
 @Component
+@Profile({"dev", "test"})
 public class Initialize implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(Initialize.class);
@@ -55,8 +57,11 @@ public class Initialize implements CommandLineRunner {
             log.debug("Created GUEST role with authorities: {}, {}", AuthorityConstants.USER_RETRIEVE, AuthorityConstants.ROLE_RETRIEVE);
 
             authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_SAVE));
+            authorityRepository.saveAndFlush(new Authority(AuthorityConstants.USER_DELETE));
             Role adminRole = roleRepository.saveAndFlush(new Role("ADMIN", authorityRepository.findAll()));
-            log.debug("Created ADMIN role with all authorities");
+            log.debug("Created ADMIN role with all authorities: {}, {}, {}, {}",
+                AuthorityConstants.USER_RETRIEVE, AuthorityConstants.ROLE_RETRIEVE,
+                AuthorityConstants.USER_SAVE, AuthorityConstants.USER_DELETE);
 
             User user = new User();
             user.setName("Lorem Ipsum");

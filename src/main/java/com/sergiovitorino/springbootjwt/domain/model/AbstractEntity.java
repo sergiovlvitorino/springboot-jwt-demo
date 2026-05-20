@@ -3,6 +3,7 @@ package com.sergiovitorino.springbootjwt.domain.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -26,6 +27,11 @@ public abstract class AbstractEntity implements Serializable {
     @PrePersist
     public void onPrePersist() {
         this.dateCreatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onPreUpdate() {
+        this.dateUpdatedAt = LocalDateTime.now();
     }
 
     // Getters and Setters

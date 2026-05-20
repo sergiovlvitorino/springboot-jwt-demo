@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TokenAuthenticationService {
@@ -35,21 +36,29 @@ public class TokenAuthenticationService {
         final var user = userRepository.findByEmailWithAuthorities(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Instant now = Instant.now();
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(user.getId().toString())
-                .issuedAt(now)
-                .expiresAt(now.plusMillis(expirationTime))
-                .claim("authorities", extractAuthorities(user.getRole().getAuthorities()))
-                .claim("Username", user.getUsername())
-                .build();
-
-        var header = JwsHeader.with(MacAlgorithm.HS256).build();
-        String jwt = jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+        String authorities = extractAuthorities(user.getRole().getAuthorities());
+        String jwt = generateAccessToken(user.getId().toString(), user.getEmail(), authorities);
         res.addHeader(HEADER_STRING, TOKEN_PREFIX + " " + jwt);
     }
 
+    public String generateAccessToken(String subject, String username, String authorities) {
+        Instant now = Instant.now();
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .subject(subject)
+                .issuedAt(now)
+                .expiresAt(now.plusMillis(expirationTime))
+                .claim("authorities", authorities)
+                .claim("Username", username)
+                .claim("token_type", "access")
+                .build();
+
+        var header = JwsHeader.with(MacAlgorithm.HS256).build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+    }
+
     private String extractAuthorities(final List<Authority> authorities) {
-        return String.join(",", authorities.stream().map(Authority::getName).toList());
+        return authorities.stream()
+                .map(Authority::getName)
+                .collect(Collectors.joining(","));
     }
 }

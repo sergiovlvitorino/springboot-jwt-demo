@@ -3,18 +3,14 @@ package com.sergiovitorino.springbootjwt.domain.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.*;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-public class User extends AbstractEntity implements UserDetails {
+public class User extends AbstractEntity {
 
     @Id
     @GeneratedValue
@@ -41,46 +37,8 @@ public class User extends AbstractEntity implements UserDetails {
     @JoinColumn(nullable = false, name = "role_id")
     private Role role;
 
-    @JsonIgnore
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (role == null || role.getAuthorities() == null || role.getAuthorities().isEmpty()) {
-            return AuthorityUtils.createAuthorityList("ROLE_GUEST");
-        }
-        final String[] authorities = role.getAuthorities().stream()
-                .map(Authority::getName)
-                .toArray(String[]::new);
-        return AuthorityUtils.createAuthorityList(authorities);
-    }
-
-    @Override
     public String getPassword() {
         return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return !Boolean.TRUE.equals(accountLocked);
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return Boolean.TRUE.equals(enabled);
     }
 
     // Constructors

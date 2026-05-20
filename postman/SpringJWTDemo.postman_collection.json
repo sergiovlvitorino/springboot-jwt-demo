@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "Login",
+			"name": "Auth",
 			"item": [
 				{
 					"name": "Login",
@@ -20,6 +20,11 @@
 									"    const token = authHeader.replace('Bearer ', '').trim();",
 									"    pm.environment.set('token', token);",
 									"    console.log('Token saved to environment');",
+									"}",
+									"const json = pm.response.json();",
+									"if (json && json.refreshToken) {",
+									"    pm.environment.set('refreshToken', json.refreshToken);",
+									"    console.log('Refresh token saved to environment');",
 									"}"
 								],
 								"type": "text/javascript"
@@ -50,6 +55,57 @@
 							],
 							"path": [
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const json = pm.response.json();",
+									"if (json && json.accessToken) {",
+									"    pm.environment.set('token', json.accessToken);",
+									"    console.log('New access token saved');",
+									"}",
+									"if (json && json.refreshToken) {",
+									"    pm.environment.set('refreshToken', json.refreshToken);",
+									"    console.log('New refresh token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/auth/refresh",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
 							]
 						}
 					},

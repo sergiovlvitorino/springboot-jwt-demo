@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: Authentication API
+  version: 6.0.0
+  description: Login + Refresh Token endpoints
+
+paths:
+  /login:
+    post:
+      summary: Authenticate user with credentials
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Authorization:
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiJ9..."
+              description: Access token (short-lived)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials or account locked
+        '429':
+          description: Rate limit exceeded
+
+  /auth/refresh:
+    post:
+      summary: Exchange refresh token for new token pair (rotation)
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid request body (refreshToken blank)
+        '401':
+          description: |
+            Refresh token invalid/expired/already-used, OR user disabled/locked.
+            Returned as ErrorBean with errorCode=INVALID_REFRESH_TOKEN.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '429':
+          description: Rate limit exceeded
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: "admin@example.com"
+        password:
+          type: string
+          format: password
+          example: "Test@1234"
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    TokenResponse:
+      type: object
+      required: [accessToken, refreshToken]
+      properties:
+        accessToken:
+          type: string
+          description: JWT with claim token_type=access (short-lived, default 1h)
+          example: "eyJhbGciOiJIUzI1NiJ9..."
+        refreshToken:
+          type: string
+          description: Opaque token (UUID), one-time use, default 7 days expiry
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    ErrorBean:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: "INVALID_REFRESH_TOKEN"
+        field:
+          type: string
+          nullable: true
+        message:
+          type: string
+
+    ErrorList:
+      type: array
+      items:
+        $ref: '#/components/schemas/ErrorBean'

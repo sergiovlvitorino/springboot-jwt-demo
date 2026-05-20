@@ -1,5 +1,6 @@
 package com.sergiovitorino.springbootjwt.infrastructure.security;
 
+import com.sergiovitorino.springbootjwt.application.service.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -23,19 +25,26 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 public class WebSecurityConfig {
 
     private final TokenAuthenticationService tokenAuthenticationService;
+    private final RefreshTokenService refreshTokenService;
+    private final LoginAttemptService loginAttemptService;
 
     @Value("${springdoc.api-docs.enabled:true}")
     private boolean apiDocsEnabled;
 
-    public WebSecurityConfig(TokenAuthenticationService tokenAuthenticationService) {
+    public WebSecurityConfig(TokenAuthenticationService tokenAuthenticationService,
+                             RefreshTokenService refreshTokenService,
+                             LoginAttemptService loginAttemptService) {
         this.tokenAuthenticationService = tokenAuthenticationService;
+        this.refreshTokenService = refreshTokenService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            AuthenticationManager authenticationManager,
                                            JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
-        var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager, tokenAuthenticationService);
+        var jwtLoginFilter = new JWTLoginFilter("/login", authenticationManager,
+                tokenAuthenticationService, refreshTokenService, loginAttemptService);
 
         http.cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
@@ -44,9 +53,16 @@ public class WebSecurityConfig {
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                 .contentTypeOptions(Customizer.withDefaults())
                 .frameOptions(frame -> frame.deny())
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .requestMatcher(AnyRequestMatcher.INSTANCE)
+                    .maxAgeInSeconds(31536000)
+                    .includeSubDomains(true)
+                )
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'"))
             )
             .authorizeHttpRequests(auth -> {
                 auth.requestMatchers(HttpMethod.POST, "/login").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll();
                 if (apiDocsEnabled) {
                     auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();

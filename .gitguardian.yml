@@ -1,0 +1,18 @@
+# GitGuardian configuration — https://docs.gitguardian.com/ggshield-docs/reference/config
+#
+# Files in this list are documentation/templates for local dev defaults,
+# NOT actual secrets. The PostgreSQL default credentials (`postgres/postgres`)
+# are the documented out-of-the-box behavior of the official `postgres` image
+# and are never used in production (production uses ${DB_USER}/${DB_PASSWORD}
+# from environment variables, enforced via fail-fast `${VAR:?}` syntax).
+
+version: 2
+
+paths-ignore:
+  # Local-only dev compose with placeholder credentials.
+  # Production uses docker-compose.yml with ${VAR:?} fail-fast vars.
+  - docker-compose.dev.yml
+
+  # Template file documenting required env vars (no real secrets).
+  # Real values go in .env which is git-ignored.
+  - .env.example

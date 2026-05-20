@@ -1,7 +1,7 @@
 package com.sergiovitorino.springbootjwt.ui.rest.controller.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sergiovitorino.springbootjwt.domain.model.Role;
+import com.sergiovitorino.springbootjwt.application.command.role.RoleResponse;
 import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import com.sergiovitorino.springbootjwt.infrastructure.util.LoginHelper;
 import org.json.JSONObject;
@@ -43,13 +43,13 @@ public class RoleRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }
@@ -62,15 +62,22 @@ public class RoleRestControllerTest {
     }
 
     @Test
+    public void testIfListCommandReturnsBadRequestWhenPageSizeExceedsMax() throws Exception {
+        var entity = new HttpEntity<String>(null, headers);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=101&orderBy=name&asc=true&role.name=GUEST", HttpMethod.GET, entity, String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void testIfListCommandReturnsOk2() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=true", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }
@@ -78,13 +85,13 @@ public class RoleRestControllerTest {
     @Test
     public void testIfListCommandReturnsOk3() throws Exception {
         var entity = new HttpEntity<String>(null, headers);
-        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=10000&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
+        var responseEntity = this.restTemplete.exchange("http://localhost:" + port + "/rest/role?pageNumber=0&pageSize=100&orderBy=name&asc=false", HttpMethod.GET, entity, String.class);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
         // Verificar se a resposta é um objeto JSON válido
         var jsonObject = new JSONObject(responseEntity.getBody());
         assertTrue(jsonObject.has("content"));
-        List<Role> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, Role.class));
+        List<RoleResponse> list = mapper.readValue(jsonObject.getString("content"), mapper.getTypeFactory().constructParametricType(List.class, RoleResponse.class));
         assertNotNull(list);
         assertFalse(list.isEmpty());
     }

@@ -48,4 +48,53 @@ class RoleTest {
         assertTrue(s.contains("name='ADMIN'"));
         assertFalse(s.contains("users"));
     }
+
+    @Test
+    void constructor_withAllArgs_shouldSetAllFields() {
+        UUID id = UUID.randomUUID();
+        Authority auth = new Authority("READ");
+        User user = new User();
+        List<Authority> authorities = List.of(auth);
+        List<User> users = List.of(user);
+
+        Role role = new Role(id, "ADMIN", users, authorities);
+
+        assertEquals(id, role.getId());
+        assertEquals("ADMIN", role.getName());
+        assertEquals(users, role.getUsers());
+        assertEquals(authorities, role.getAuthorities());
+    }
+
+    @Test
+    void constructor_withNameAndAuthorities_shouldSetFields() {
+        Authority auth = new Authority("WRITE");
+        List<Authority> authorities = List.of(auth);
+
+        Role role = new Role("EDITOR", authorities);
+
+        assertEquals("EDITOR", role.getName());
+        assertEquals(authorities, role.getAuthorities());
+        assertNull(role.getId());
+    }
+
+    @Test
+    void setUsers_shouldUpdateUsersList() {
+        Role role = new Role();
+        User user = new User();
+        List<User> users = List.of(user);
+
+        role.setUsers(users);
+
+        assertEquals(users, role.getUsers());
+    }
+
+    @Test
+    void getUsers_shouldReturnSetValue() {
+        User user = new User();
+        UUID id = UUID.randomUUID();
+        Role role = new Role(id, "ROLE", List.of(user), List.of());
+
+        assertNotNull(role.getUsers());
+        assertEquals(1, role.getUsers().size());
+    }
 }

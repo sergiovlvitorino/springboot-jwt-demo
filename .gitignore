@@ -1,4 +1,8 @@
 HELP.md
+.env
+!.env.example
+.claude/*
+!.claude/skills/
 /target/
 !.mvn/wrapper/maven-wrapper.jar
 

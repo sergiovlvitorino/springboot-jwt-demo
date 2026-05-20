@@ -1,0 +1,221 @@
+# SDD Gate — valida invariantes do Spec-Driven Development em PRs para master.
+#
+# Rationale: a constituição do projeto (Article X — Governança) exige que toda
+# mudança em specs/, memory/ e implementação respeite o fluxo SDD. Este workflow
+# automatiza a fiscalização — falha ruidosa quando um invariante for violado.
+#
+# Escopo: NÃO valida arquivos sob `.specify/` (toolchain Spec Kit é externa).
+
+name: SDD Gate
+
+on:
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sdd-invariants:
+    name: Validate SDD invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      # fetch-depth: 0 é necessário para diff vs master (checks #1 e #3).
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Garante que o ref `origin/master` exista localmente para `git diff`.
+      # Em PRs cross-fork, o checkout traz tudo, mas explicitamos por segurança.
+      - name: Ensure master ref is available
+        run: |
+          set -euo pipefail
+          git fetch origin master:refs/remotes/origin/master --no-tags --depth=1 || true
+          git rev-parse origin/master >/dev/null
+
+      # ---------------------------------------------------------------------
+      # Check #1 — Constitution sem bump de versão.
+      # Rationale: Article XII (Governança) exige que toda mudança na
+      # constituição venha com bump semver. A linha canônica é
+      # `**Versão:** X.Y.Z` no header de memory/constitution.md.
+      # ---------------------------------------------------------------------
+      - name: Check 1 — Constitution semver bump
+        run: |
+          set -euo pipefail
+
+          CONST_FILE="memory/constitution.md"
+
+          if ! git diff --name-only origin/master...HEAD | grep -qx "${CONST_FILE}"; then
+            echo "Constitution not modified — skipping."
+            exit 0
+          fi
+
+          # Extrai a primeira ocorrência de `**Versão:** X.Y.Z` em ambas as
+          # versões (master e HEAD). Tolerante a espaços extras.
+          extract_version() {
+            local ref="$1"
+            git show "${ref}:${CONST_FILE}" 2>/dev/null \
+              | grep -oE '\*\*Versão:\*\*[[:space:]]+[0-9]+\.[0-9]+\.[0-9]+' \
+              | head -n1 \
+              | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true
+          }
+
+          MASTER_VER="$(extract_version origin/master)"
+          HEAD_VER="$(extract_version HEAD)"
+
+          echo "master version: ${MASTER_VER:-<none>}"
+          echo "HEAD   version: ${HEAD_VER:-<none>}"
+
+          if [[ -z "${HEAD_VER}" ]]; then
+            echo "::error file=${CONST_FILE}::Constitution missing '**Versão:** X.Y.Z' header (Article: Governança)"
+            exit 1
+          fi
+
+          if [[ "${MASTER_VER}" == "${HEAD_VER}" ]]; then
+            echo "::error file=${CONST_FILE}::Constitution changed without semver bump (Article: Governança)"
+            exit 1
+          fi
+
+      # ---------------------------------------------------------------------
+      # Check #2 — Spec marcada `Implemented` mas tasks.md tem `- [ ]`.
+      # Rationale: o status `Implemented` é uma promessa pública de que toda
+      # task foi entregue. Tasks abertas sob esse status indicam dessincronia
+      # entre realidade e documentação.
+      # ---------------------------------------------------------------------
+      - name: Check 2 — Implemented spec must have all tasks done
+        run: |
+          set -euo pipefail
+
+          fail=0
+          while IFS= read -r -d '' spec; do
+            dir="$(dirname "${spec}")"
+            tasks="${dir}/tasks.md"
+
+            # Status linha exemplo: `**Status:** Implemented`
+            status="$(grep -oE '\*\*Status:\*\*[[:space:]]+[A-Za-z ]+' "${spec}" \
+              | head -n1 \
+              | sed -E 's/\*\*Status:\*\*[[:space:]]+//;s/[[:space:]]+$//' || true)"
+
+            if [[ "${status}" != "Implemented" ]]; then
+              continue
+            fi
+
+            if [[ ! -f "${tasks}" ]]; then
+              # Coberto pelo Check #4, mas sinalizamos aqui também.
+              echo "::error file=${spec}::Spec marked Implemented but tasks.md is missing"
+              fail=1
+              continue
+            fi
+
+            # Match `- [ ]` (com espaço dentro) — case-sensitive. Aceita TAB ou
+            # espaços antes do hífen.
+            if grep -nE '^[[:space:]]*-[[:space:]]\[[[:space:]]\]' "${tasks}" >/dev/null; then
+              echo "::error file=${tasks}::Spec marked Implemented but tasks.md has incomplete tasks"
+              grep -nE '^[[:space:]]*-[[:space:]]\[[[:space:]]\]' "${tasks}" | head -n5
+              fail=1
+            fi
+          done < <(find specs -mindepth 2 -maxdepth 2 -name 'spec.md' -print0)
+
+          exit "${fail}"
+
+      # ---------------------------------------------------------------------
+      # Check #3 — Mudança em src/main/java/** sem referência a spec.
+      # Heurística: se o PR toca código produtivo Java mas não toca specs/,
+      # e o título do PR não é chore/docs/fix, emitimos WARNING (não failure).
+      # Rationale: nem todo fix/chore precisa de spec; bloquear como erro
+      # geraria fricção. Operador pode acknowledgar comentando na PR.
+      #
+      # NOTE: Heurística do título é frágil — labels seriam mais robustos,
+      # mas o projeto ainda não padronizou labels para SDD. Pragmaticamente,
+      # mantemos como warning até que a convenção amadureça.
+      # ---------------------------------------------------------------------
+      - name: Check 3 — Java code changes should reference a spec (warning)
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+
+          changed="$(git diff --name-only origin/master...HEAD)"
+
+          touches_java="$(echo "${changed}" | grep -E '^src/main/java/' || true)"
+          touches_specs="$(echo "${changed}" | grep -E '^specs/' || true)"
+
+          if [[ -z "${touches_java}" ]]; then
+            echo "No src/main/java changes — skipping."
+            exit 0
+          fi
+
+          if [[ -n "${touches_specs}" ]]; then
+            echo "PR touches specs/ — OK."
+            exit 0
+          fi
+
+          # Conventional commit-ish prefixes that legitimately skip spec.
+          if echo "${PR_TITLE}" | grep -qiE '^(chore|docs|fix)(\([^)]+\))?:'; then
+            echo "PR title (${PR_TITLE}) is chore/docs/fix — exempt."
+            exit 0
+          fi
+
+          echo "::warning::PR modifies src/main/java/** but does not reference any spec under specs/. If this is a feature, create or update a spec. If it is a chore/docs/fix, prefix the PR title accordingly."
+
+      # ---------------------------------------------------------------------
+      # Check #4 — Diretório de spec malformado.
+      # Rationale: a forma canônica `NNN-feature-name/{spec,plan,tasks}.md`
+      # é contrato. Diretórios incompletos quebram navegação e automation.
+      # ---------------------------------------------------------------------
+      - name: Check 4 — Spec directories must have spec.md, plan.md, tasks.md
+        run: |
+          set -euo pipefail
+
+          fail=0
+          # Diretórios de spec seguem `specs/<digits>-<slug>`.
+          while IFS= read -r -d '' dir; do
+            base="$(basename "${dir}")"
+            # Regex: 1+ dígitos, hífen, qualquer slug (kebab-case esperado).
+            if [[ ! "${base}" =~ ^[0-9]+-.+$ ]]; then
+              continue
+            fi
+
+            missing=()
+            for f in spec.md plan.md tasks.md; do
+              [[ -f "${dir}/${f}" ]] || missing+=("${f}")
+            done
+
+            if (( ${#missing[@]} > 0 )); then
+              echo "::error file=${dir}::Malformed spec directory: missing ${missing[*]}"
+              fail=1
+            fi
+          done < <(find specs -mindepth 1 -maxdepth 1 -type d -print0)
+
+          exit "${fail}"
+
+      # ---------------------------------------------------------------------
+      # Check #5 — IDs de spec duplicados.
+      # Rationale: o ID numérico é a chave primária da feature; duplicatas
+      # criam ambiguidade em referências cruzadas (PRs, commits, docs).
+      # ---------------------------------------------------------------------
+      - name: Check 5 — Spec IDs must be unique
+        run: |
+          set -euo pipefail
+
+          # Extrai o prefixo numérico de cada diretório `specs/NNN-...`.
+          dupes="$(find specs -mindepth 1 -maxdepth 1 -type d \
+            | sed -E 's|.*/||' \
+            | grep -oE '^[0-9]+' \
+            | sort \
+            | uniq -d || true)"
+
+          if [[ -n "${dupes}" ]]; then
+            echo "::error::Duplicate spec ID(s) detected: ${dupes}"
+            # Lista todos os diretórios afetados para facilitar debug.
+            for id in ${dupes}; do
+              echo "  ID ${id}:"
+              find specs -mindepth 1 -maxdepth 1 -type d -name "${id}-*" -printf '    %p\n'
+            done
+            exit 1
+          fi

@@ -2,10 +2,9 @@ package com.sergiovitorino.springbootjwt.ui.rest.controller;
 
 import com.sergiovitorino.springbootjwt.application.command.user.*;
 import com.sergiovitorino.springbootjwt.application.service.UserService;
-import com.sergiovitorino.springbootjwt.domain.exception.ResourceNotFoundException;
+import com.sergiovitorino.springbootjwt.infrastructure.security.PiiMasker;
 import com.sergiovitorino.springbootjwt.domain.model.AuthorityConstants;
 import com.sergiovitorino.springbootjwt.domain.model.User;
-import com.sergiovitorino.springbootjwt.domain.repository.RoleRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -31,11 +30,9 @@ public class UserRestController {
     private static final Logger log = LoggerFactory.getLogger(UserRestController.class);
 
     private final UserService userService;
-    private final RoleRepository roleRepository;
 
-    public UserRestController(UserService userService, RoleRepository roleRepository) {
+    public UserRestController(UserService userService) {
         this.userService = userService;
-        this.roleRepository = roleRepository;
     }
 
     @Operation(summary = "List users", description = "Returns a paginated list of users.")
@@ -67,17 +64,8 @@ public class UserRestController {
     @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
     @PostMapping
     public ResponseEntity<UserResponse> post(@RequestBody @Valid SaveCommand command) {
-        log.debug("POST /rest/user - Creating user with email: {}", command.email());
-        var user = new User();
-        user.setName(command.name());
-        user.setEmail(command.email());
-        user.setPassword(command.password());
-        var role = roleRepository.findById(command.roleId()).orElseThrow(() -> {
-            log.warn("POST /rest/user - Role not found: {}", command.roleId());
-            return new ResourceNotFoundException("Role not found");
-        });
-        user.setRole(role);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(userService.save(user)));
+        log.debug("POST /rest/user - Creating user with email: {}", PiiMasker.maskEmail(command.email()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.from(userService.save(command)));
     }
 
     @Operation(summary = "Update an existing user", description = "Updates an existing user's name.")
@@ -100,7 +88,7 @@ public class UserRestController {
             @ApiResponse(responseCode = "200", description = "User disabled successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_SAVE + "')")
+    @PreAuthorize("hasAuthority('" + AuthorityConstants.USER_DELETE + "')")
     @DeleteMapping("/{id}")
     public ResponseEntity<UserResponse> delete(@PathVariable UUID id) {
         log.debug("DELETE /rest/user/{} - Disabling user", id);

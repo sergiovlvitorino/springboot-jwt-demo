@@ -2,6 +2,7 @@ package com.sergiovitorino.springbootjwt.domain.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,5 +44,41 @@ class AuthorityTest {
         String s = a.toString();
         assertTrue(s.contains("Authority{"));
         assertTrue(s.contains("name='ROLE_ADMIN'"));
+    }
+
+    @Test
+    void constructor_withAllArgs_shouldSetAllFields() {
+        UUID id = UUID.randomUUID();
+        Role role = new Role("ADMIN", List.of());
+        List<Role> roles = List.of(role);
+
+        Authority authority = new Authority(id, "USER_RETRIEVE", roles);
+
+        assertEquals(id, authority.getId());
+        assertEquals("USER_RETRIEVE", authority.getName());
+        assertEquals(roles, authority.getRoles());
+    }
+
+    @Test
+    void setRoles_shouldUpdateRolesList() {
+        Authority authority = new Authority();
+        Role role = new Role("ROLE_USER", List.of());
+        List<Role> roles = List.of(role);
+
+        authority.setRoles(roles);
+
+        assertEquals(roles, authority.getRoles());
+    }
+
+    @Test
+    void getRoles_shouldReturnSetValue() {
+        UUID id = UUID.randomUUID();
+        Role role = new Role("ADMIN", List.of());
+        List<Role> roles = List.of(role);
+
+        Authority authority = new Authority(id, "USER_DELETE", roles);
+
+        assertNotNull(authority.getRoles());
+        assertEquals(1, authority.getRoles().size());
     }
 }

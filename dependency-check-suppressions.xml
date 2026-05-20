@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        OWASP Dependency-Check Suppression File
+        ========================================
+        Add false positive suppressions here. Example:
+
+        <suppress>
+            <notes><![CDATA[
+                Reason for suppression: false positive, not applicable, etc.
+            ]]></notes>
+            <packageUrl regex="true">^pkg:maven/com\.example/artifact@.*$</packageUrl>
+            <cve>CVE-YYYY-NNNNN</cve>
+        </suppress>
+    -->
+</suppressions>

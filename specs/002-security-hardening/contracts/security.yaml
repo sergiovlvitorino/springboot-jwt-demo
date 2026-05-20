@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: Security Hardening Contracts
+  version: 2.0.0
+  description: |
+    Backfill retroativo do contrato de endpoints e respostas afetados pela
+    Spec 002 (Security Hardening). Documenta apenas o que foi impactado por
+    esta spec — demais endpoints estao em outros contratos (ex.: refresh
+    token em specs/005-refresh-token-and-containers/contracts/auth.yaml).
+
+    Escopo desta spec:
+      - POST /login           → rate limit por IP real (X-Forwarded-For)
+      - DELETE /rest/user/{id} → nova authority granular USER_DELETE
+      - Headers globais        → HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+      - Padrao de erro         → ErrorBean (Article VIII da constituicao)
+
+    NOTE: O body de /login retornava somente o token via header Authorization
+    no momento da spec 002. O campo refreshToken no body foi adicionado mais
+    tarde pela spec 005. Aqui registramos o contrato historico.
+
+# NOTE: endpoints adicionais (CRUD /rest/user, /rest/role, /auth/refresh)
+# estao documentados em outras specs/contracts/. Esta especificacao cobre
+# apenas o que a Spec 002 alterou.
+
+servers:
+  - url: http://localhost:8080
+    description: Local dev
+
+tags:
+  - name: Auth
+    description: Authentication endpoints affected by rate limit hardening
+  - name: User
+    description: User endpoints affected by granular authority split
+
+paths:
+  /login:
+    post:
+      summary: Authenticate user with credentials
+      description: |
+        Issues an access token (JWT) returned in the `Authorization` response
+        header as `Bearer <jwt>`. Subject to per-IP rate limiting via
+        `LoginRateLimitFilter` — when behind a reverse proxy, the real client
+        IP is extracted from `X-Forwarded-For` (first entry).
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      parameters:
+        - in: header
+          name: X-Forwarded-For
+          required: false
+          schema:
+            type: string
+            example: "203.0.113.7, 10.0.0.1"
+          description: |
+            Optional. When present, the first IP is used by
+            `LoginRateLimitFilter` as the rate-limit key (AC-4, AC-5).
+            Falls back to `request.getRemoteAddr()` when absent (AC-6).
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Authorization:
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiJ9..."
+              description: Access token (JWT)
+            # Headers globais aplicados pelo Spring Security em TODAS as respostas (AC-7..AC-9)
+            Strict-Transport-Security:
+              schema:
+                type: string
+                example: "max-age=31536000 ; includeSubDomains"
+              description: HSTS (AC-7, AC-8)
+            Content-Security-Policy:
+              schema:
+                type: string
+                example: "default-src 'none'"
+              description: CSP para API REST pura (AC-7, AC-9)
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+              description: Clickjacking protection
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: "nosniff"
+              description: MIME-type sniffing protection
+            Referrer-Policy:
+              schema:
+                type: string
+                example: "strict-origin-when-cross-origin"
+        '401':
+          description: Invalid credentials or account locked
+        '429':
+          description: |
+            Rate limit exceeded. Default: 10 attempts per 60s per IP.
+            Configuravel via `login.rate-limit.max-attempts` (AC-4..AC-6).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Too many login attempts. Please try again later."
+
+  /rest/user/{id}:
+    delete:
+      summary: Disable user (soft-delete)
+      description: |
+        Soft-disables the user (sets `enabled=false` + `dateDisabledAt`).
+        Spec 002 introduced authority `USER_DELETE` (separate from
+        `USER_SAVE`) — caller must hold `USER_DELETE` to invoke this endpoint
+        (AC-1, AC-2). `@EnableMethodSecurity` is required for `@PreAuthorize`
+        to be enforced (AC-3).
+      tags: [User]
+      security:
+        - bearerAuth: [USER_DELETE]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Missing or invalid bearer token
+        '403':
+          description: |
+            Authenticated but missing authority `USER_DELETE` (AC-2).
+            Returned as ErrorBean array with errorCode=ACCESS_DENIED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token issued by `POST /login`. Sent in `Authorization`
+        header as `Bearer <jwt>`. Authorities are mapped from the JWT claim
+        `authorities` and enforced by `@PreAuthorize` at controller level.
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: "admin@example.com"
+        password:
+          type: string
+          format: password
+          example: "Test@1234"
+
+    UserResponse:
+      type: object
+      description: |
+        DTO retornado pelos endpoints de usuario. NOTE: o shape exato e mantido
+        pelo controller (ver UserResponse.java) e nao foi alterado pela spec 002.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        enabled:
+          type: boolean
+
+    ErrorBean:
+      type: object
+      description: |
+        Padrao de erro definido no Article VIII da constituicao.
+        Implementado em `infrastructure/ErrorBean.java`.
+      required: [errorCode, message]
+      properties:
+        errorCode:
+          type: string
+          example: "ACCESS_DENIED"
+          description: Codigo estavel de erro (nao traduzir)
+        fieldError:
+          type: string
+          nullable: true
+          description: Nome do campo com erro de validacao (quando aplicavel)
+        message:
+          type: string
+          example: "You don't have permission to perform this action"
+
+    ErrorList:
+      type: array
+      description: Respostas de erro sao sempre arrays de ErrorBean
+      items:
+        $ref: '#/components/schemas/ErrorBean'

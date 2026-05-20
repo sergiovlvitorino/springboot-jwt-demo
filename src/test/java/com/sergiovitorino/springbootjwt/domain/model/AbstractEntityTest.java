@@ -50,4 +50,24 @@ class AbstractEntityTest {
         e.onPrePersist();
         assertNotNull(e.getDateCreatedAt());
     }
+
+    @Test
+    void onPreUpdate_setsDateUpdatedAt() {
+        TestEntity e = new TestEntity();
+        assertNull(e.getDateUpdatedAt());
+        e.onPreUpdate();
+        assertNotNull(e.getDateUpdatedAt());
+    }
+
+    @Test
+    void onPreUpdate_doesNotChange_dateCreatedAt() {
+        // dateCreatedAt deve ser imutável após persist; @PreUpdate não deve tocá-lo
+        TestEntity e = new TestEntity();
+        e.onPrePersist();
+        LocalDateTime created = e.getDateCreatedAt();
+
+        e.onPreUpdate();
+
+        assertEquals(created, e.getDateCreatedAt(), "dateCreatedAt não deve ser alterado por onPreUpdate");
+    }
 }
