@@ -1,4 +1,6 @@
 HELP.md
+.env
+!.env.example
 .claude/*
 !.claude/skills/
 /target/
